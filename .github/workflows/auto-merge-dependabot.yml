@@ -39,8 +39,8 @@ jobs:
           PR_NUMBER: ${{ github.event.workflow_run.pull_requests[0].number }}
         run: |
           set -euo pipefail
-          info="$(gh pr view "$PR_NUMBER" --json author,isMerged,mergeStateStatus)" || {
-            echo "PR #$PR_NUMBER not found (closed or deleted) - nothing to do."
+          info="$(gh pr view "$PR_NUMBER" --json author,mergedAt,mergeStateStatus)" || {
+            echo "Could not query PR #$PR_NUMBER (closed or deleted) - nothing to do."
             exit 0
           }
           author="$(jq -r .author.login <<<"$info")"
@@ -48,7 +48,7 @@ jobs:
             echo "PR #$PR_NUMBER is by $author - leaving it to a human."
             exit 0
           fi
-          if [[ "$(jq -r .isMerged <<<"$info")" == "true" ]]; then
+          if [[ "$(jq -r '.mergedAt // empty' <<<"$info")" != "" ]]; then
             echo "PR #$PR_NUMBER already merged - nothing to do."
             exit 0
           fi
