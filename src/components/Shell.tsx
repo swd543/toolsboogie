@@ -52,6 +52,11 @@ export function Shell(props: { children?: JSX.Element }) {
   const toggleGroup = (id: string) => setOpenGroup(openGroup() === id ? null : id);
   const closeGroups = () => setOpenGroup(null);
 
+  /** Items/tone of the open group (for the shared dropdown panel). */
+  const openGroupDef = createMemo(() => NAV_GROUPS.find((g) => g.id === openGroup()) ?? null);
+  const openItems = createMemo(() => (openGroupDef() ? groupTools(openGroupDef()!.paths) : []));
+  const openTone = createMemo(() => openGroupDef()?.tone ?? 'dev');
+
   // Close on route change (covers in-app navigation through any link).
   createEffect(() => {
     void location.pathname;
@@ -83,60 +88,66 @@ export function Shell(props: { children?: JSX.Element }) {
             <Logo class="logo-mark" />
             <span>{site.name}</span>
           </a>
-          <nav class="site-nav" aria-label="Tools" onKeyDown={onNavKey}>
-            {NAV_GROUPS.map((g) => {
-              const items = groupTools(g.paths);
-              if (items.length <= 1) {
-                const t = items[0]!;
+          <nav class="site-nav-wrap" aria-label="Tools" onKeyDown={onNavKey}>
+            <div class="site-nav" onScroll={closeGroups}>
+              {NAV_GROUPS.map((g) => {
+                const items = groupTools(g.paths);
+                if (items.length <= 1) {
+                  const t = items[0]!;
+                  return (
+                    <a
+                      class={`nav-link tone-${g.tone}`}
+                      href={t.path}
+                      aria-current={isActive(t.path) ? 'page' : undefined}
+                    >
+                      <i class="dot" />
+                      {g.label}
+                    </a>
+                  );
+                }
+                const groupActive = g.paths.some(isActive);
                 return (
-                  <a
-                    class={`nav-link tone-${g.tone}`}
-                    href={t.path}
-                    aria-current={isActive(t.path) ? 'page' : undefined}
-                  >
-                    <i class="dot" />
-                    {g.label}
-                  </a>
+                  <span class={`nav-group tone-${g.tone}`}>
+                    <button
+                      type="button"
+                      class="nav-link nav-drop-btn"
+                      aria-expanded={openGroup() === g.id}
+                      aria-haspopup="true"
+                      data-active={groupActive || undefined}
+                      onClick={() => toggleGroup(g.id)}
+                    >
+                      {g.label}
+                      <ChevronDownIcon class="chev" />
+                    </button>
+                  </span>
                 );
-              }
-              const groupActive = g.paths.some(isActive);
-              return (
-                <span class={`nav-group tone-${g.tone}`}>
-                  <button
-                    type="button"
-                    class="nav-link nav-drop-btn"
-                    aria-expanded={openGroup() === g.id}
-                    aria-haspopup="true"
-                    data-active={groupActive || undefined}
-                    onClick={() => toggleGroup(g.id)}
-                  >
-                    {g.label}
-                    <ChevronDownIcon class="chev" />
-                  </button>
-                  <Show when={openGroup() === g.id}>
-                    <ul class="nav-drop">
-                      {items.map((t) => (
-                        <li>
-                          <a
-                            href={t.path}
-                            aria-current={isActive(t.path) ? 'page' : undefined}
-                            onClick={closeGroups}
-                          >
-                            <i class="dot" />
-                            {t.label}
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
-                  </Show>
-                </span>
-              );
-            })}
-            {staticPages.map((p) => (
-              <a href={p.path} aria-current={isActive(p.path) ? 'page' : undefined}>
-                {p.label}
-              </a>
-            ))}
+              })}
+              {staticPages.map((p) => (
+                <a href={p.path} aria-current={isActive(p.path) ? 'page' : undefined}>
+                  {p.label}
+                </a>
+              ))}
+            </div>
+            {/* Dropdown panel lives OUTSIDE the scrolling strip so it is
+                never clipped; it is anchored to the strip's right edge. */}
+            <Show when={openGroup() !== null}>
+              <div class={`site-nav-drop tone-${openTone()}`}>
+                <ul>
+                  {openItems().map((t) => (
+                    <li>
+                      <a
+                        href={t.path}
+                        aria-current={isActive(t.path) ? 'page' : undefined}
+                        onClick={closeGroups}
+                      >
+                        <i class="dot" />
+                        {t.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </Show>
           </nav>
           <Show when={openGroup() !== null}>
             <button

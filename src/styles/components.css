@@ -41,12 +41,28 @@
   flex: none;
 }
 
+/* pdfboogie pattern: the strip scrolls left-to-right inside the viewport
+   (min-width: 0 lets the flex item shrink; hidden scrollbar keeps it quiet),
+   so nav items never overflow the header. */
+.site-nav-wrap {
+  position: relative;
+  margin-left: auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
 .site-nav {
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  margin-left: auto;
   min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.site-nav::-webkit-scrollbar {
+  display: none;
 }
 
 /* Long tokens (JWTs, wallet addresses, hashes) must not force horizontal scroll. */
@@ -89,7 +105,7 @@ code {
   display: inline-flex;
 }
 
-/* biome-ignore lint/style/noDescendingSpecificity: group controls interleaved with higher-specificity rules */
+/* biome-ignore lint/style/noDescendingSpecificity: disclosure-button sizing interleaved with higher-specificity rules */
 .nav-drop-btn {
   display: inline-flex;
   align-items: center;
@@ -106,11 +122,17 @@ code {
   transform: rotate(180deg);
 }
 
-.nav-drop {
+/* Dropdown panel: rendered OUTSIDE the scrolling strip (sibling element),
+   anchored to the strip's right edge — never clipped by the strip's
+   overflow, closes when the strip scrolls (onScroll → closeGroups). */
+.site-nav-drop {
   position: absolute;
   top: calc(100% + 10px);
-  left: 0;
+  right: 0;
   z-index: 40;
+}
+
+.site-nav-drop ul {
   min-width: 185px;
   padding: 0.35rem;
   margin: 0;
@@ -122,7 +144,7 @@ code {
   text-align: left;
 }
 
-.nav-drop a {
+.site-nav-drop a {
   display: flex;
   align-items: center;
   gap: 0.55rem;
@@ -132,12 +154,12 @@ code {
   font-size: 0.875rem;
 }
 
-.nav-drop a:hover {
+.site-nav-drop a:hover {
   color: var(--accent);
   background: var(--accent-soft);
 }
 
-.nav-drop a[aria-current="page"] {
+.site-nav-drop a[aria-current="page"] {
   color: var(--accent);
   font-weight: 600;
 }
@@ -151,11 +173,11 @@ code {
   flex: none;
 }
 
-.site-nav > a .dot {
+.site-nav a .dot {
   margin-right: 0.45rem;
 }
 
-.site-nav > a {
+.site-nav a {
   display: inline-flex;
   align-items: center;
 }
