@@ -283,7 +283,7 @@ fn fs_main(@builtin(position) pos: vec4<f32>) -> loc0: vec4<f32> {
     // Bubble: a sphere at the tilt position, sliding inside the face.
     let travel = R * 0.72;
     let bubbleC = vec2<f32>(u.tilt.x, -u.tilt.y) * travel;
-    let br = R * 0.30;
+    let br = R * 0.24;
     let d = length(p - bubbleC);
     if (d < br) {
       // Body color lerps accent→ok with levelness.

@@ -165,19 +165,23 @@ export default function LevelPage() {
     const travel = R * 0.72;
     const bx = R + clamp01(e.gamma / 15) * travel;
     const by = R - clamp01(e.beta / 15) * travel;
-    const br = R * 0.3;
+    const br = R * 0.24;
     const body = e.level > 0.95 ? ok : accent;
+    // A slightly darker rim tone so the sphere reads as shaded, not flat.
+    const rim = e.level > 0.95 ? (dark ? '#2f9e6a' : '#14532d') : (dark ? '#8b5cf6' : '#4c1d95');
     const grad = g.createRadialGradient(bx - br * 0.35, by - br * 0.35, br * 0.1, bx, by, br);
-    grad.addColorStop(0, '#ffffff');
-    grad.addColorStop(0.25, body);
-    grad.addColorStop(1, body);
+    grad.addColorStop(0, 'rgba(255,255,255,0.95)');
+    grad.addColorStop(0.3, body);
+    grad.addColorStop(1, rim);
     g.beginPath();
     g.arc(bx, by, br, 0, Math.PI * 2);
     g.fillStyle = grad;
     g.fill();
-    g.lineWidth = 2 * dpr;
+    g.lineWidth = 1.2 * dpr;
+    g.globalAlpha = 0.45;
     g.strokeStyle = ink;
     g.stroke();
+    g.globalAlpha = 1;
   }
 
   /* ---------- surface setup ----------
