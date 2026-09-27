@@ -54,7 +54,7 @@ jobs:
           wasm-pack build . --target web --out-dir pkg --out-name toolcore
 
       - name: Upload pkg artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: toolcore-pkg
           path: wasm/toolcore/pkg
