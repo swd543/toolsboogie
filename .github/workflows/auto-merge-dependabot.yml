@@ -1,0 +1,62 @@
+# Auto-merge Dependabot PRs once CI is green.
+#
+# Fires on completion of the main "CI & Deploy" run, and only when that run
+# finished green on a pull request. Merges the PR only if:
+#   - it was authored by dependabot[bot] (routine or security updates),
+#   - it is not already merged,
+#   - its merge state is CLEAN (no conflicts, in sync with main).
+#
+# Manual PRs, red runs, out-of-sync or conflicting PRs are always left to a
+# human. The squash title is Dependabot's own ("Bump X from A to B"), so the
+# history stays readable.
+name: Auto-merge Dependabot
+
+on:
+  workflow_run:
+    workflows: ["CI & Deploy"]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: auto-merge-${{ github.event.workflow_run.id }}
+  cancel-in-progress: false
+
+jobs:
+  auto-merge:
+    name: Merge green Dependabot PR
+    runs-on: ubuntu-latest
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.pull_requests[0] != null
+    steps:
+      - name: Merge if it is a green Dependabot PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.workflow_run.pull_requests[0].number }}
+        run: |
+          set -euo pipefail
+          info="$(gh pr view "$PR_NUMBER" --json author,isMerged,mergeStateStatus)" || {
+            echo "PR #$PR_NUMBER not found (closed or deleted) - nothing to do."
+            exit 0
+          }
+          author="$(jq -r .author.login <<<"$info")"
+          if [[ "$author" != "dependabot[bot]" ]]; then
+            echo "PR #$PR_NUMBER is by $author - leaving it to a human."
+            exit 0
+          fi
+          if [[ "$(jq -r .isMerged <<<"$info")" == "true" ]]; then
+            echo "PR #$PR_NUMBER already merged - nothing to do."
+            exit 0
+          fi
+          state="$(jq -r .mergeStateStatus <<<"$info")"
+          if [[ "$state" != "CLEAN" ]]; then
+            echo "PR #$PR_NUMBER merge state is $state (out of sync or conflicts) - not auto-merging."
+            exit 0
+          fi
+          echo "Merging green Dependabot PR #$PR_NUMBER (squash)."
+          gh pr merge --squash "$PR_NUMBER"
+          echo "Merged."
