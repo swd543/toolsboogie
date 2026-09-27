@@ -12,14 +12,16 @@ concurrency:
 env:
   # Pages site parameters — used for the deploy build (base path + absolute URLs).
   # Topology: repo `swd543/toolsboogie` → *project* site under /toolsboogie/.
-  # The deploy build therefore uses base /toolsboogie/ and the canonical
-  # absolute URL https://swd543.github.io/toolsboogie. The `test` job builds
-  # with base / so the static output can be served from a plain server root.
-  # (If the site ever moves to a custom domain bound to the site ROOT, flip
-  # the deploy VITE_BASE back to / and set VITE_SITE_URL to the custom
-  # domain.)
-  VITE_BASE: /toolsboogie/
-  VITE_SITE_URL: https://swd543.github.io/toolsboogie
+  # Custom domain tools.bugaboxes.com (CNAME → swd543.github.io, DNS-only;
+  # set via the Pages API on this repo) is bound to the site's ROOT by GitHub:
+  # tools.bugaboxes.com/ serves the site, and swd543.github.io/toolsboogie/…
+  # 301-redirects to tools.bugaboxes.com/… (the /toolsboogie prefix is
+  # dropped). The site is therefore built with base / and the canonical
+  # absolute URLs are the bugaboxes ones.
+  # (If the custom domain is ever removed, flip VITE_BASE back to /toolsboogie/
+  # so the site works under swd543.github.io/toolsboogie/.)
+  VITE_BASE: /
+  VITE_SITE_URL: https://tools.bugaboxes.com
   WASM_PACK_VERSION: "0.13.1"
 
 jobs:
@@ -134,7 +136,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # Pages build: sub-path base + absolute site URL (sitemap/OG/robots)
+      # Pages build: root base (custom domain tools.bugaboxes.com) + absolute
+      # site URL (sitemap/OG/robots)
       - name: Build for Pages
         run: |
           pnpm build
