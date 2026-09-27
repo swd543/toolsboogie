@@ -155,7 +155,7 @@ export default function JwtPage() {
       <ToolPage
         tone="dev"
         title="JWT decode, sign & verify"
-        lede="Decode a token, inspect header, payload and time claims, then sign or verify with HS256/384/512, RS256/384/512 or ES256/384/512 — via WebCrypto, entirely on your device. Secrets and keys never leave the page."
+        lede="Decode a token, inspect header, payload and time claims, then sign or verify with HS256/384/512, RS256/384/512 or ES256/384/512 - via WebCrypto, entirely on your device. Secrets and keys never leave the page."
         related={[
           { path: '/json-format', label: 'JSON format' },
           { path: '/time', label: 'Date & time (epoch ↔ date)' },
@@ -188,7 +188,7 @@ export default function JwtPage() {
               <div class="opt-group">
                 <span class="opt-label">Good to know</span>
                 <p class="opt-hint">
-                  Decoding needs no key — the token is not encrypted, only (optionally) signed. The
+                  Decoding needs no key - the token is not encrypted, only (optionally) signed. The
                   signature check happens in “Sign / verify”.
                 </p>
                 <p class="opt-hint">
@@ -301,7 +301,7 @@ export default function JwtPage() {
                 </Show>
                 <Show when={!isHmac()}>
                   <div class="field">
-                    <span>Private key (sign) — PKCS#8 PEM or JWK</span>
+                    <span>Private key (sign) - PKCS#8 PEM or JWK</span>
                     <textarea
                       class="code-edit"
                       rows={4}
@@ -312,7 +312,7 @@ export default function JwtPage() {
                     />
                   </div>
                   <div class="field">
-                    <span>Public key (verify) — SPKI PEM or JWK</span>
+                    <span>Public key (verify) - SPKI PEM or JWK</span>
                     <textarea
                       class="code-edit"
                       rows={4}
@@ -396,7 +396,7 @@ export default function JwtPage() {
               <div class={verify()!.valid ? 'ok-note' : 'error-card'}>
                 {verify()!.valid ? <CheckIcon /> : <XIcon />}
                 <span>
-                  <b>{verify()!.valid ? 'Signature valid ✓' : 'Signature invalid'}</b> —{' '}
+                  <b>{verify()!.valid ? 'Signature valid ✓' : 'Signature invalid'}</b> -{' '}
                   {verify()!.reason}
                 </span>
               </div>

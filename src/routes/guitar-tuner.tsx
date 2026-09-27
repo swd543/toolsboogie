@@ -101,7 +101,7 @@ export default function GuitarTunerPage() {
       }
       if (typeof window !== 'undefined' && !window.isSecureContext) {
         throw new Error(
-          'Microphones only work on HTTPS pages. This site is currently served over HTTP while its domain certificate is being issued — it will work as soon as it is live over https.',
+          'Microphones only work on HTTPS pages. This site is currently served over HTTP while its domain certificate is being issued - it will work as soon as it is live over https.',
         );
       }
       stream = await navigator.mediaDevices.getUserMedia({
@@ -112,7 +112,7 @@ export default function GuitarTunerPage() {
       node = new AudioWorkletNode(ctx, 'frame-accumulator');
       const src = ctx.createMediaStreamSource(stream);
       silentGain = ctx.createGain();
-      silentGain.gain.value = 0; // analysis only — nothing is played
+      silentGain.gain.value = 0; // analysis only - nothing is played
       src.connect(node);
       node.connect(silentGain);
       silentGain.connect(ctx.destination);
@@ -158,7 +158,7 @@ export default function GuitarTunerPage() {
       <ToolPage
         tone="guitar"
         title="Guitar tuner"
-        lede="Tap a string and watch the gauge. A YIN pitch detector runs on 8192-sample frames from your microphone — note, cents and frequency update live, and the spectrum shows what it hears. Nothing is recorded or sent anywhere."
+        lede="Tap a string and watch the gauge. A YIN pitch detector runs on 8192-sample frames from your microphone - note, cents and frequency update live, and the spectrum shows what it hears. Nothing is recorded or sent anywhere."
         related={[
           { path: '/compass', label: 'Compass' },
           { path: '/level', label: 'Level' },
@@ -238,7 +238,7 @@ export default function GuitarTunerPage() {
             </Show>
             <div class="mic-status" data-live={live() ? 'true' : 'false'}>
               <span class="dot" />
-              {live() ? 'listening — analysis is silent (0 dB out)' : 'microphone idle'}
+              {live() ? 'listening - analysis is silent (0 dB out)' : 'microphone idle'}
             </div>
             <Show when={error() !== ''}>
               <div class="error-card" style="margin-top: 0.75rem">
@@ -286,7 +286,7 @@ export default function GuitarTunerPage() {
                 (↑). Green means within ±5¢ of the selected string.
               </p>
               <p class="opt-hint">
-                Low E (82 Hz) needs a clear ring — a quiet room helps. If the note reads an octave
+                Low E (82 Hz) needs a clear ring - a quiet room helps. If the note reads an octave
                 off, the string was probably heard through its 2nd harmonic; re-tap and listen to
                 the cents.
               </p>

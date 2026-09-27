@@ -112,7 +112,7 @@ export default function TimePage() {
       <ToolPage
         tone="dev"
         title="Date & time converter"
-        lede="Turn any timestamp into any other: ISO 8601, RFC 2822, epoch (seconds to nanoseconds), Windows FILETIME, .NET ticks, SQL — rendered in the timezone you choose, with copy-ready snippets for Python, pandas, Go, C, Linux and JavaScript."
+        lede="Turn any timestamp into any other: ISO 8601, RFC 2822, epoch (seconds to nanoseconds), Windows FILETIME, .NET ticks, SQL - rendered in the timezone you choose, with copy-ready snippets for Python, pandas, Go, C, Linux and JavaScript."
         related={[
           { path: '/json-format', label: 'JSON format' },
           { path: '/string-escape', label: 'String escape' },
@@ -120,7 +120,7 @@ export default function TimePage() {
         ]}
       >
         <div class="panel">
-          <div class="panel-title">Now — live</div>
+          <div class="panel-title">Now - live</div>
           <div class="panel-body" style="display: flex; flex-wrap: wrap; gap: 1.5rem">
             <div>
               <div class="stat-big">{now().epochMs}</div>

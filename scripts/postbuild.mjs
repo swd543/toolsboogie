@@ -92,7 +92,7 @@ const notFound = `<!doctype html>
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Page not found — ToolsBoogie</title>
+<title>Page not found - ToolsBoogie</title>
 <meta name="robots" content="noindex" />
 <meta name="referrer" content="no-referrer" />
 <link rel="icon" href="favicon.svg" type="image/svg+xml" />
@@ -109,7 +109,7 @@ const notFound = `<!doctype html>
 </head>
 <body>
   <main>
-    <h1>404 — page not found</h1>
+    <h1>404 - page not found</h1>
     <p>The page you're looking for doesn't exist. The tools, however, are very much here.</p>
     <a class="btn" href="./">Back to the tools</a>
   </main>

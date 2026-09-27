@@ -48,7 +48,7 @@ export default function Home() {
         <p class="lede">{site.description}</p>
         <div class="badge-row">
           <span class="badge">
-            <ShieldTiny /> 100% client-side — nothing is uploaded
+            <ShieldTiny /> 100% client-side - nothing is uploaded
           </span>
           <span class="badge">
             <BoltTiny /> Free · no account · works offline once loaded

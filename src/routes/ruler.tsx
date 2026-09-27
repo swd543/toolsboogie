@@ -264,7 +264,7 @@ export default function RulerPage() {
   createEffect(() => {
     void widthPx();
     void cal();
-    if (!hasRaf) return; // server render — no animation frame
+    if (!hasRaf) return; // server render - no animation frame
     cancelAnimationFrame(raf);
     raf = requestAnimationFrame(draw);
   });
@@ -306,7 +306,7 @@ export default function RulerPage() {
       <ToolPage
         tone="measure"
         title="On-screen ruler"
-        lede="A literal ruler for your screen: metric on the left half, imperial on the right — each zero at its outer edge, so you can measure against either side. It calibrates itself from your screen's pixel density (96 × devicePixelRatio — an estimate, flagged as such); enter your display's real size for exactness. Click-drag to measure between two points."
+        lede="A literal ruler for your screen: metric on the left half, imperial on the right - each zero at its outer edge, so you can measure against either side. It calibrates itself from your screen's pixel density (96 × devicePixelRatio - an estimate, flagged as such); enter your display's real size for exactness. Click-drag to measure between two points."
         related={[
           { path: '/level', label: 'Level' },
           { path: '/compass', label: 'Compass' },
@@ -345,7 +345,7 @@ export default function RulerPage() {
                 fallback={
                   <>
                     <p class="opt-hint">
-                      Not calibrated — re-infer from this screen, or enter your display size below.
+                      Not calibrated - re-infer from this screen, or enter your display size below.
                       (Measuring a sheet of paper held against the screen works too, if you don't
                       know its specs.)
                     </p>
@@ -451,7 +451,7 @@ export default function RulerPage() {
               {viewportText() !== ''
                 ? `Viewport: ${viewportText()}${cal()!.estimated ? ' (estimated)' : ''}`
                 : ''}{' '}
-              The ruler uses your browser's CSS pixels, so browser zoom scales it — keep zoom at
+              The ruler uses your browser's CSS pixels, so browser zoom scales it - keep zoom at
               100% for real-world readings.
             </p>
           </div>

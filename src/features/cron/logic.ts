@@ -273,13 +273,13 @@ export function parseCron(input: string): CronParse {
   if (fields.length === 7) {
     return fail(
       expr,
-      'Seven-field (Quartz) expressions are not supported — use 5 fields, or 6 with a leading seconds field.',
+      'Seven-field (Quartz) expressions are not supported - use 5 fields, or 6 with a leading seconds field.',
     );
   }
   if (fields.length !== 5 && !(hasSeconds && fields.length === 6)) {
     return fail(
       expr,
-      `Expected 5 fields (or 6 with a leading seconds field) — got ${fields.length}.`,
+      `Expected 5 fields (or 6 with a leading seconds field) - got ${fields.length}.`,
     );
   }
 
@@ -429,7 +429,7 @@ function describeTimes(minute: FieldSpec, hour: FieldSpec): string | null {
 /** One or two plain-English sentences describing the schedule. */
 export function explainCron(p: ParsedCron): string {
   if (p.reboot) {
-    return 'Runs once when the system (or cron daemon) boots — not a clock schedule, so there are no “next runs” to list.';
+    return 'Runs once when the system (or cron daemon) boots - not a clock schedule, so there are no “next runs” to list.';
   }
 
   const bits: string[] = [];
@@ -469,7 +469,7 @@ export function explainCron(p: ParsedCron): string {
   const dowRestricted = !p.dow.star;
   if (domRestricted && dowRestricted) {
     bits.push(
-      `on day ${describeValues(p.dom.values, 'listed')} of the month OR on ${dowList(p.dow.values)} (both fields restricted — standard cron fires when either matches)`,
+      `on day ${describeValues(p.dom.values, 'listed')} of the month OR on ${dowList(p.dow.values)} (both fields restricted - standard cron fires when either matches)`,
     );
   } else if (domRestricted) {
     bits.push(`on day ${describeValues(p.dom.values, 'listed')} of each month`);

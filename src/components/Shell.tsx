@@ -181,7 +181,7 @@ export function Shell(props: { children?: JSX.Element }) {
           </nav>
           <div class="donate">
             <span class="donate-label">
-              Free to use — but hosting isn't free. If {site.name} helps, a donation is appreciated:
+              Free to use - but hosting isn't free. If {site.name} helps, a donation is appreciated:
             </span>
             {site.donation.map((d) => (
               <span class="donate-addr" title={d.address}>
@@ -230,7 +230,7 @@ export function ToolPage(props: {
         <p class="lede">{props.lede}</p>
         <div class="badge-row">
           <span class="badge">
-            <ShieldTiny /> 100% private — runs in your browser
+            <ShieldTiny /> 100% private - runs in your browser
           </span>
           <span class="badge">
             <BoltTiny /> No upload · No account

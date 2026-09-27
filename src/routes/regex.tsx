@@ -26,12 +26,12 @@ import {
 import { copyText } from '~/lib/clipboard';
 
 const FLAG_DEFS: { id: keyof RegexFlags; label: string; hint: string }[] = [
-  { id: 'g', label: 'g', hint: 'global — all matches' },
+  { id: 'g', label: 'g', hint: 'global - all matches' },
   { id: 'i', label: 'i', hint: 'case-insensitive' },
-  { id: 'm', label: 'm', hint: 'multiline — ^$ per line' },
-  { id: 's', label: 's', hint: 'dotall — . matches newlines' },
-  { id: 'u', label: 'u', hint: 'unicode — proper code points' },
-  { id: 'y', label: 'y', hint: 'sticky — fixed position' },
+  { id: 'm', label: 'm', hint: 'multiline - ^$ per line' },
+  { id: 's', label: 's', hint: 'dotall - . matches newlines' },
+  { id: 'u', label: 'u', hint: 'unicode - proper code points' },
+  { id: 'y', label: 'y', hint: 'sticky - fixed position' },
 ];
 
 export default function RegexPage() {
@@ -89,7 +89,7 @@ export default function RegexPage() {
       <ToolPage
         tone="dev"
         title="Regex checker & builder"
-        lede="Type a pattern, watch it match live, and get flagged when a construct won't survive your target engine — JavaScript, Python, Go, Java, PCRE, POSIX ERE, .NET or Rust. Live matching uses the browser's ECMAScript engine; the lint is a static feature check per flavor."
+        lede="Type a pattern, watch it match live, and get flagged when a construct won't survive your target engine - JavaScript, Python, Go, Java, PCRE, POSIX ERE, .NET or Rust. Live matching uses the browser's ECMAScript engine; the lint is a static feature check per flavor."
         related={[
           { path: '/string-escape', label: 'String escape' },
           { path: '/json-format', label: 'JSON format' },
@@ -109,7 +109,7 @@ export default function RegexPage() {
                     <For each={FLAVORS}>
                       {(f) => (
                         <option value={f.id}>
-                          {f.label} — {f.note}
+                          {f.label} - {f.note}
                         </option>
                       )}
                     </For>
@@ -127,7 +127,7 @@ export default function RegexPage() {
                     <For each={lint()}>
                       {(w) => (
                         <li>
-                          <code>{w.snippet}</code> — {w.message}
+                          <code>{w.snippet}</code> - {w.message}
                         </li>
                       )}
                     </For>

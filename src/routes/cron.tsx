@@ -151,7 +151,7 @@ export default function CronPage() {
       <ToolPage
         tone="dev"
         title="Cron builder & explainer"
-        lede="Turn cron schedules into plain English — and build them back. Paste an expression to see what it does and when it fires next (in your timezone), or pick options to generate one. Handles 5-field and 6-field (seconds) cron plus @-aliases. 100% in your browser."
+        lede="Turn cron schedules into plain English - and build them back. Paste an expression to see what it does and when it fires next (in your timezone), or pick options to generate one. Handles 5-field and 6-field (seconds) cron plus @-aliases. 100% in your browser."
         related={[
           { path: '/time', label: 'Date & time' },
           { path: '/regex', label: 'Regex' },
@@ -248,7 +248,7 @@ export default function CronPage() {
                   </button>
                 </Show>
                 <p class="opt-hint">
-                  Building sets the expression on the left — edit it freely afterwards; it is
+                  Building sets the expression on the left - edit it freely afterwards; it is
                   re-parsed live.
                 </p>
               </div>
@@ -291,7 +291,7 @@ export default function CronPage() {
                 </p>
                 <p class="opt-hint">
                   Times are wall-clock in your local timezone. On DST change days a non-existent
-                  time is skipped and a repeated time fires once — like system crons.
+                  time is skipped and a repeated time fires once - like system crons.
                 </p>
               </div>
             </div>
@@ -329,7 +329,7 @@ export default function CronPage() {
               <p class="cron-sentence">{sentence()}</p>
               <Show when={cron()!.alias}>
                 <p class="opt-hint">
-                  Alias <code>{cron()!.alias}</code> — expanded to its standard equivalent.
+                  Alias <code>{cron()!.alias}</code> - expanded to its standard equivalent.
                 </p>
               </Show>
               <div class="cron-fields">
@@ -346,13 +346,13 @@ export default function CronPage() {
             </div>
 
             <div class="panel">
-              <div class="panel-title">Next runs — {timeZoneName()}</div>
+              <div class="panel-title">Next runs - {timeZoneName()}</div>
               <Show
                 when={runs() !== null}
                 fallback={
                   <p class="opt-hint">
                     This schedule never matches a real calendar time (for example, day 30 in
-                    February) — or it is not a clock schedule.
+                    February) - or it is not a clock schedule.
                   </p>
                 }
               >

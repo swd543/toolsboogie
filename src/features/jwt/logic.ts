@@ -208,7 +208,7 @@ export function claimStatuses(
 
 function subtle(): Crypto['subtle'] {
   if (!globalThis.crypto?.subtle) {
-    throw new Error('WebCrypto is unavailable — use a secure context (HTTPS or localhost).');
+    throw new Error('WebCrypto is unavailable - use a secure context (HTTPS or localhost).');
   }
   return globalThis.crypto.subtle;
 }
@@ -337,10 +337,10 @@ export async function signToken(
     const pem = opts.privateKey;
     const fmt = detectPemFormat(pem);
     if (fmt === 'spki')
-      throw new Error('That PEM looks like a PUBLIC key — signing needs a private key.');
+      throw new Error('That PEM looks like a PUBLIC key - signing needs a private key.');
     if (fmt === 'pkcs1') {
       throw new Error(
-        'PKCS#1 ("RSA PRIVATE KEY") PEM is not accepted by browser WebCrypto — convert to PKCS#8 (e.g. `openssl pkcs8 -topk8 -nocrypt -in key.pem`) or paste a JWK.',
+        'PKCS#1 ("RSA PRIVATE KEY") PEM is not accepted by browser WebCrypto - convert to PKCS#8 (e.g. `openssl pkcs8 -topk8 -nocrypt -in key.pem`) or paste a JWK.',
       );
     }
     const der = stripPem(pem);
@@ -415,7 +415,7 @@ export async function verifyToken(
   const header = decodeSegment<Record<string, unknown>>(headerB64, 'Header');
   const alg = (header.alg as string) ?? '';
   if (alg === 'none' || alg === '') {
-    return { valid: false, reason: 'alg "none" — unsigned tokens are refused.', alg };
+    return { valid: false, reason: 'alg "none" - unsigned tokens are refused.', alg };
   }
   if (!signatureB64) {
     return { valid: false, reason: 'Missing signature part.', alg };
@@ -437,7 +437,7 @@ export async function verifyToken(
       const ok = await subtleApi.verify('HMAC', key, bs(sig), bs(signingInput));
       return ok
         ? { valid: true, reason: 'Signature matches.', alg }
-        : { valid: false, reason: 'Signature mismatch — wrong secret or different token.', alg };
+        : { valid: false, reason: 'Signature mismatch - wrong secret or different token.', alg };
     }
     if (RSA_ALGS.includes(alg as JwtAlg)) {
       if (!opts.publicKey)
@@ -461,7 +461,7 @@ export async function verifyToken(
       const ok = await subtleApi.verify('RSASSA-PKCS1-v1_5', key, bs(sig), bs(signingInput));
       return ok
         ? { valid: true, reason: 'Signature matches.', alg }
-        : { valid: false, reason: 'Signature mismatch — wrong key or different token.', alg };
+        : { valid: false, reason: 'Signature mismatch - wrong key or different token.', alg };
     }
     if (EC_ALGS.includes(alg as JwtAlg)) {
       const ec = alg as 'ES256' | 'ES384' | 'ES512';
@@ -511,7 +511,7 @@ export async function verifyToken(
       }
       return ok
         ? { valid: true, reason: 'Signature matches.', alg }
-        : { valid: false, reason: 'Signature mismatch — wrong key or different token.', alg };
+        : { valid: false, reason: 'Signature mismatch - wrong key or different token.', alg };
     }
     return { valid: false, reason: `Unsupported algorithm: ${alg}`, alg };
   } catch (e) {

@@ -15,7 +15,7 @@ export async function jsonToYaml(input: string): Promise<ConvertResult> {
 
 export function coreUnavailableMessage(e: unknown): string | null {
   if (e instanceof CapabilityError) {
-    return 'The WASM core is missing in this build — run `pnpm wasm` and reload. (JSON→YAML needs the Rust core.)';
+    return 'The WASM core is missing in this build - run `pnpm wasm` and reload. (JSON→YAML needs the Rust core.)';
   }
   return null;
 }

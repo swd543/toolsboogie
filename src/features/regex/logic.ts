@@ -438,7 +438,7 @@ export const EXAMPLES: Example[] = [
     label: 'Email (practical)',
     pattern: '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}',
     test: 'contact jane.doe+tag@example.co.uk and j@localhost',
-    note: 'The practical email pattern — not the 200-line RFC one.',
+    note: 'The practical email pattern - not the 200-line RFC one.',
   },
   {
     label: 'IPv4',
@@ -481,7 +481,7 @@ export const EXAMPLES: Example[] = [
     label: 'Phone (loose)',
     pattern: '(?:\\+\\d{1,3}[ \\-]?)?(?:\\d[ \\-]?){6,14}\\d',
     test: 'call +44 20 7946 0958 or 01234567890',
-    note: 'Loose international shape — validate before you rely on it.',
+    note: 'Loose international shape - validate before you rely on it.',
   },
 ];
 

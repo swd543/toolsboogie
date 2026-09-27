@@ -63,7 +63,7 @@ export default function JsonToYamlPage() {
       <ToolPage
         tone="dev"
         title="JSON to YAML"
-        lede="Convert JSON to clean, human-friendly YAML — keys, nesting and arrays rendered the way YAML users expect. Runs entirely in your browser."
+        lede="Convert JSON to clean, human-friendly YAML - keys, nesting and arrays rendered the way YAML users expect. Runs entirely in your browser."
         related={[
           { path: '/json-format', label: 'JSON format' },
           { path: '/yaml-format', label: 'YAML format & → JSON' },
@@ -85,7 +85,7 @@ export default function JsonToYamlPage() {
               <p class="opt-hint">
                 Numbers, <code>true</code>/<code>false</code> and <code>null</code> are preserved
                 exactly; key order follows your JSON (the core keeps insertion order). Only
-                single-document JSON is converted — an array or object at the top level.
+                single-document JSON is converted - an array or object at the top level.
               </p>
               <p class="opt-hint">
                 This tool needs the Rust core; if the page was built without it, run{' '}

@@ -137,7 +137,7 @@ export default function JsonFormatPage() {
               </label>
               <p class="opt-hint">
                 Without the Rust core (run <code>pnpm wasm</code> to build it) the formatter falls
-                back to the engine's JSON — same result, approximate error positions.
+                back to the engine's JSON - same result, approximate error positions.
               </p>
             </div>
           }

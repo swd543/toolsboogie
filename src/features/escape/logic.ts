@@ -292,14 +292,14 @@ export const VARIANTS: EscapeVariant[] = [
   {
     id: 'url-component',
     label: 'URL component',
-    note: 'encodeURIComponent — for a query value or path segment.',
+    note: 'encodeURIComponent - for a query value or path segment.',
     escape: (s) => encodeURIComponent(s),
     unescape: (s) => decodeURIComponent(s),
   },
   {
     id: 'url-path',
     label: 'URL path',
-    note: 'encodeURI — keeps the URL structure characters intact.',
+    note: 'encodeURI - keeps the URL structure characters intact.',
     escape: (s) => encodeURI(s),
     unescape: (s) => decodeURI(s),
   },

@@ -190,7 +190,7 @@ export default function LevelPage() {
    - Canvas2D (base): its rAF loop runs for the life of the page and draws
      every frame, so the face is never blank.
    - WebGPU (top): only opaque where it draws (the face circle). If the
-     surface provably fails (format mismatch, repeated render errors — some
+     surface provably fails (format mismatch, repeated render errors - some
      mobile drivers fail silently), it is disposed and the base layer shows
      through the now-inert WebGPU canvas. A blank face is impossible either
      way. */
@@ -319,7 +319,7 @@ export default function LevelPage() {
 
         <Show when={typeof window !== 'undefined' && !window.isSecureContext}>
           <p class="http-note">
-            This page is served over HTTP for now, so your browser may restrict motion sensors — iOS
+            This page is served over HTTP for now, so your browser may restrict motion sensors - iOS
             Safari only offers the permission prompt over HTTPS (Android still works over HTTP). The
             site switches to HTTPS automatically once its domain certificate is issued.
           </p>
@@ -329,7 +329,7 @@ export default function LevelPage() {
           aside={
             <>
               <div class="opt-group">
-                <span class="opt-label">Demo — no motion sensors?</span>
+                <span class="opt-label">Demo - no motion sensors?</span>
                 <label class="toggle">
                   <input
                     type="checkbox"
@@ -365,7 +365,7 @@ export default function LevelPage() {
                     <output>{demoGamma().toFixed(1)}°</output>
                   </label>
                   <p class="opt-hint">
-                    The sliders drive the exact pipeline the sensor uses — watch the bubble, the
+                    The sliders drive the exact pipeline the sensor uses - watch the bubble, the
                     ring and the readout react.
                   </p>
                 </Show>
@@ -374,7 +374,7 @@ export default function LevelPage() {
                 <span class="opt-label">Notes</span>
                 <p class="opt-hint">
                   “Tilt” is the combined angle from flat; the ring glows green within 0.5°. Hold the
-                  device face-up for stable readings — the bubble shows which way to tilt.
+                  device face-up for stable readings - the bubble shows which way to tilt.
                 </p>
                 <p class="opt-hint">
                   Calibrate if the device rests in a case or holder; the offset is applied until you

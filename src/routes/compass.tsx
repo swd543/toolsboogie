@@ -25,7 +25,7 @@ export default function CompassPage() {
   const [heading, setHeading] = createSignal(0);
   const [smooth, setSmooth] = createSignal<number | null>(null);
   /** Continuous (UNWRAPPED) needle angle. The needle transform is
-      `-needleDeg`, and CSS transitions interpolate numerically — if the
+      `-needleDeg`, and CSS transitions interpolate numerically - if the
       angle were the 0..360 heading, crossing north (359° → 1°) would
       animate a full 358° sweep. Accumulating the per-tick deltas keeps
       consecutive values close, so the CSS always animates the short arc. */
@@ -256,7 +256,7 @@ export default function CompassPage() {
 
         <Show when={typeof window !== 'undefined' && !window.isSecureContext}>
           <p class="http-note">
-            This page is served over HTTP for now, so your browser may restrict motion sensors — iOS
+            This page is served over HTTP for now, so your browser may restrict motion sensors - iOS
             Safari only offers the permission prompt over HTTPS (Android still works over HTTP). The
             site switches to HTTPS automatically once its domain certificate is issued.
           </p>
@@ -268,12 +268,12 @@ export default function CompassPage() {
               <span class="opt-label">How it works</span>
               <p class="opt-hint">
                 On iOS the browser exposes a calibrated magnetic heading (
-                <code>webkitCompassHeading</code>) — true north after calibration. On other
+                <code>webkitCompassHeading</code>) - true north after calibration. On other
                 platforms the raw <code>alpha</code> axis is used, which only matches magnetic north
                 while the device lies roughly flat; hold it flat and level it up.
               </p>
               <p class="opt-hint">
-                No location, no network, no storage — the heading is computed on-device and
+                No location, no network, no storage - the heading is computed on-device and
                 discarded.
               </p>
               <Show when={status() === 'denied'}>

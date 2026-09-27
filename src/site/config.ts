@@ -18,10 +18,10 @@ export interface Donation {
 
 export const site = {
   name: 'ToolsBoogie',
-  tagline: 'Tools that boogie — right in your browser.',
+  tagline: 'Tools that boogie - right in your browser.',
   description:
     'Free, secure and private browser tools: guitar tuner, JSON/YAML formatter and converter, regex checker, ' +
-    'string escaper, date/time converter, JWT decoder, compass, level and on-screen ruler. 100% client-side — ' +
+    'string escaper, date/time converter, JWT decoder, compass, level and on-screen ruler. 100% client-side - ' +
     'everything runs on your device and nothing is ever uploaded.',
   /** Default origin used when VITE_SITE_URL is not set (dev). */
   fallbackUrl: 'http://localhost:3000',
@@ -89,7 +89,7 @@ export const tools: ToolDef[] = [
   {
     path: '/guitar-tuner',
     label: 'Guitar tuner',
-    blurb: 'Tune by ear or by eye — live pitch from your microphone, on device.',
+    blurb: 'Tune by ear or by eye - live pitch from your microphone, on device.',
     icon: 'tuner',
   },
   {
@@ -101,7 +101,7 @@ export const tools: ToolDef[] = [
   {
     path: '/json-to-yaml',
     label: 'JSON → YAML',
-    blurb: 'Convert JSON to clean YAML — no round-tripping through a server.',
+    blurb: 'Convert JSON to clean YAML - no round-tripping through a server.',
     icon: 'swap',
   },
   {
@@ -113,7 +113,7 @@ export const tools: ToolDef[] = [
   {
     path: '/regex',
     label: 'Regex',
-    blurb: 'Check and build regular expressions — linted for the engine you target.',
+    blurb: 'Check and build regular expressions - linted for the engine you target.',
     icon: 'regex',
   },
   {
@@ -125,20 +125,20 @@ export const tools: ToolDef[] = [
   {
     path: '/time',
     label: 'Date & time',
-    blurb: 'Convert timestamps: ISO, epoch, FILETIME, .NET ticks, Python, SQL — any timezone.',
+    blurb: 'Convert timestamps: ISO, epoch, FILETIME, .NET ticks, Python, SQL - any timezone.',
     icon: 'time',
   },
   {
     path: '/cron',
     label: 'Cron',
     blurb:
-      'Explain cron schedules in plain English and build them back — next fire times included.',
+      'Explain cron schedules in plain English and build them back - next fire times included.',
     icon: 'cron',
   },
   {
     path: '/jwt',
     label: 'JWT',
-    blurb: 'Decode, inspect, edit and re-sign JSON Web Tokens — HS/RS/ES, locally.',
+    blurb: 'Decode, inspect, edit and re-sign JSON Web Tokens - HS/RS/ES, locally.',
     icon: 'key',
   },
   {
@@ -151,7 +151,7 @@ export const tools: ToolDef[] = [
     path: '/ruler',
     label: 'Ruler',
     blurb:
-      'A dual-edge on-screen ruler — metric left, imperial right — that calibrates itself from your screen.',
+      'A dual-edge on-screen ruler - metric left, imperial right - that calibrates itself from your screen.',
     icon: 'ruler',
   },
   {

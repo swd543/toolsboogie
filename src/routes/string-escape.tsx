@@ -71,7 +71,7 @@ export default function StringEscapePage() {
       <ToolPage
         tone="dev"
         title="String escape & unescape"
-        lede="Turn raw text into a safe form for JSON, JavaScript, C, HTML, shell, URLs and more — or read an escaped string back to plain text. Instant, local, nothing uploaded."
+        lede="Turn raw text into a safe form for JSON, JavaScript, C, HTML, shell, URLs and more - or read an escaped string back to plain text. Instant, local, nothing uploaded."
         related={[
           { path: '/json-format', label: 'JSON format' },
           { path: '/regex', label: 'Regex checker' },

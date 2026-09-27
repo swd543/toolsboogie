@@ -12,8 +12,8 @@ export default function PrivacyPage() {
         <h1>Privacy</h1>
         <p>
           <b>{site.name}</b> is a set of tools that run entirely in your browser. Every computation
-          — JSON and YAML processing, JWT signing and verification, pitch detection, string
-          escaping, date conversion — happens on your device. Nothing you enter is transmitted to
+          - JSON and YAML processing, JWT signing and verification, pitch detection, string
+          escaping, date conversion - happens on your device. Nothing you enter is transmitted to
           us, stored, or shared.
         </p>
 
@@ -51,7 +51,7 @@ export default function PrivacyPage() {
         <h2>What we do not do</h2>
         <ul>
           <li>No accounts, no login, no email collection.</li>
-          <li>No server-side processing of your content — the site is fully static.</li>
+          <li>No server-side processing of your content - the site is fully static.</li>
           <li>No tracking of your use of the tools.</li>
         </ul>
 

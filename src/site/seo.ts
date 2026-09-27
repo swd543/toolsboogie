@@ -26,43 +26,43 @@ const ogImage = `${siteUrl}/og.png`;
 
 export const routeMeta: Record<string, RouteMeta> = {
   '/': {
-    title: `${site.name} — Free, Secure & Private Browser Tools (100% in Your Browser)`,
+    title: `${site.name} - Free, Secure & Private Browser Tools (100% in Your Browser)`,
     description:
       'Free, secure tools that run entirely in your browser: guitar tuner, JSON/YAML formatter, regex checker, ' +
       'string escaper, date/time converter, JWT decoder, compass, level and ruler. ' +
-      'No uploads, no accounts — everything stays on your device.',
+      'No uploads, no accounts - everything stays on your device.',
     image: ogImage,
   },
   '/guitar-tuner': {
-    title: 'Guitar Tuner Online — Free, Private, In-Browser (No Upload) | ToolsBoogie',
+    title: 'Guitar Tuner Online - Free, Private, In-Browser (No Upload) | ToolsBoogie',
     description:
       'Tune your guitar right in the browser. A live pitch detector listens to your strings through the ' +
-      'microphone and shows note, cents deviation and a spectrum — all on your device, nothing is recorded.',
+      'microphone and shows note, cents deviation and a spectrum - all on your device, nothing is recorded.',
     image: ogImage,
   },
   '/json-format': {
-    title: 'JSON Formatter & Minifier — Free, Private, In-Browser | ToolsBoogie',
+    title: 'JSON Formatter & Minifier - Free, Private, In-Browser | ToolsBoogie',
     description:
       'Pretty-print, minify and validate JSON with exact line and column error positions. ' +
-      'Runs in your browser — your data is never uploaded. Free JSON formatter with sort-keys option.',
+      'Runs in your browser - your data is never uploaded. Free JSON formatter with sort-keys option.',
     image: ogImage,
   },
   '/json-to-yaml': {
-    title: 'JSON to YAML Converter — Free, Private, In-Browser | ToolsBoogie',
+    title: 'JSON to YAML Converter - Free, Private, In-Browser | ToolsBoogie',
     description:
-      'Convert JSON to clean, human-readable YAML — entirely in your browser. No upload, no account, ' +
+      'Convert JSON to clean, human-readable YAML - entirely in your browser. No upload, no account, ' +
       'your data never leaves your device. Free JSON to YAML converter.',
     image: ogImage,
   },
   '/yaml-format': {
-    title: 'YAML Formatter & Validator — Free, Private, In-Browser | ToolsBoogie',
+    title: 'YAML Formatter & Validator - Free, Private, In-Browser | ToolsBoogie',
     description:
       'Validate and re-format YAML documents (or convert them to JSON) right in your browser. ' +
-      'Runs 100% client-side — nothing is uploaded. Free YAML formatter.',
+      'Runs 100% client-side - nothing is uploaded. Free YAML formatter.',
     image: ogImage,
   },
   '/regex': {
-    title: 'Regex Checker & Builder — Test Regex in-Browser, Linted per Engine | ToolsBoogie',
+    title: 'Regex Checker & Builder - Test Regex in-Browser, Linted per Engine | ToolsBoogie',
     description:
       'Test regular expressions instantly against live input, see every match and capture group, and get ' +
       "warnings when a pattern uses features your target engine (JavaScript, Python, Go, Java, PCRE, POSIX) won't " +
@@ -70,14 +70,14 @@ export const routeMeta: Record<string, RouteMeta> = {
     image: ogImage,
   },
   '/string-escape': {
-    title: 'String Escaper & Unescaper — JSON, JS, C, HTML, Shell, URL | ToolsBoogie',
+    title: 'String Escaper & Unescaper - JSON, JS, C, HTML, Shell, URL | ToolsBoogie',
     description:
       'Escape or unescape strings for JSON, JavaScript, Java, C, Python, Rust, HTML entities, URL components, ' +
-      'shell, SQL and Unicode — right in your browser. Free, private, no upload.',
+      'shell, SQL and Unicode - right in your browser. Free, private, no upload.',
     image: ogImage,
   },
   '/time': {
-    title: 'Date & Time Converter — Epoch, ISO 8601, FILETIME, Timezones | ToolsBoogie',
+    title: 'Date & Time Converter - Epoch, ISO 8601, FILETIME, Timezones | ToolsBoogie',
     description:
       'Convert dates and timestamps between ISO 8601, RFC 2822, UNIX epoch (s/ms/µs/ns), Windows FILETIME, ' +
       '.NET ticks, SQL and more, in any IANA timezone. Outputs ready to paste into Python, pandas, Go, C, ' +
@@ -85,43 +85,43 @@ export const routeMeta: Record<string, RouteMeta> = {
     image: ogImage,
   },
   '/cron': {
-    title: 'Cron Builder & Explainer — Plain-English Cron, Next Run Times | ToolsBoogie',
+    title: 'Cron Builder & Explainer - Plain-English Cron, Next Run Times | ToolsBoogie',
     description:
       'Explain cron expressions in plain English and build them back: paste a 5- or 6-field cron ' +
       '(or @alias) to see what it means, a per-field breakdown and the next five fire times in your ' +
-      'timezone, or pick options to generate the expression. 100% in your browser — free, private, no upload.',
+      'timezone, or pick options to generate the expression. 100% in your browser - free, private, no upload.',
     image: ogImage,
   },
   '/jwt': {
-    title: 'JWT Decoder & Encoder — Decode, Edit & Re-sign Tokens In-Browser | ToolsBoogie',
+    title: 'JWT Decoder & Encoder - Decode, Edit & Re-sign Tokens In-Browser | ToolsBoogie',
     description:
       'Decode JWTs, inspect claims, edit header and payload, and re-sign with HS256/384/512, RS256/384/512 ' +
-      'or ES256/384/512 — entirely in your browser via WebCrypto. Secrets and keys never leave your device.',
+      'or ES256/384/512 - entirely in your browser via WebCrypto. Secrets and keys never leave your device.',
     image: ogImage,
   },
   '/compass': {
-    title: 'Online Compass — Digital Compass in Your Browser (Free, Private) | ToolsBoogie',
+    title: 'Online Compass - Digital Compass in Your Browser (Free, Private) | ToolsBoogie',
     description:
       'A digital compass that uses your device sensors for a live true heading. Works on phones and ' +
-      'tablets; runs entirely in the browser — no data is collected.',
+      'tablets; runs entirely in the browser - no data is collected.',
     image: ogImage,
   },
   '/ruler': {
-    title: 'Online Ruler — Metric & Imperial On-Screen Ruler | ToolsBoogie',
+    title: 'Online Ruler - Metric & Imperial On-Screen Ruler | ToolsBoogie',
     description:
-      'A dual-edge on-screen ruler — centimetres on the left, inches on the right. It calibrates itself from your screen ' +
+      'A dual-edge on-screen ruler - centimetres on the left, inches on the right. It calibrates itself from your screen ' +
       'or takes your display size, and measures any distance in the browser. Free, private, no upload.',
     image: ogImage,
   },
   '/level': {
-    title: 'Digital Level — Bubble Level in Your Browser (Free, Private) | ToolsBoogie',
+    title: 'Digital Level - Bubble Level in Your Browser (Free, Private) | ToolsBoogie',
     description:
       'Turn your device into a bubble level: live tilt in degrees from the accelerometer, ' +
-      'a virtual bubble and a calibrate button. Runs entirely in the browser — no uploads.',
+      'a virtual bubble and a calibrate button. Runs entirely in the browser - no uploads.',
     image: ogImage,
   },
   '/privacy': {
-    title: `Privacy — ${site.name}`,
+    title: `Privacy - ${site.name}`,
     description:
       'How ToolsBoogie works: every tool runs locally in your browser. Nothing is uploaded, stored or ' +
       'transmitted. Read the full privacy policy.',
