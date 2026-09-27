@@ -73,7 +73,7 @@ jobs:
           name: toolcore-pkg
           path: wasm/toolcore/pkg
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: 11.13.1
 
@@ -124,7 +124,7 @@ jobs:
           name: toolcore-pkg
           path: wasm/toolcore/pkg
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: 11.13.1
 
