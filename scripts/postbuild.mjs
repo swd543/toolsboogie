@@ -49,6 +49,7 @@ const routes = [
   '/regex',
   '/string-escape',
   '/time',
+  '/cron',
   '/jwt',
   '/compass',
   '/ruler',

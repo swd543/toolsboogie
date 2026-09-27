@@ -34,6 +34,7 @@ const NAV_GROUPS: {
       '/regex',
       '/string-escape',
       '/time',
+      '/cron',
     ],
   },
 ];

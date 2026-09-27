@@ -1577,6 +1577,114 @@ input[type="range"] {
   vertical-align: -1px;
 }
 
+/* ---- Cron tool ---- */
+
+.cron-num {
+  width: 4.5rem;
+  padding: 6px 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-s);
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+.cron-build-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 10px 0;
+  color: var(--ink-muted);
+  font-size: 0.875rem;
+}
+
+.cron-build-row select {
+  font: inherit;
+  padding: 6px 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-s);
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.cron-sentence {
+  font-size: 1.0625rem;
+  line-height: 1.55;
+  margin: 0 0 14px;
+  color: var(--ink);
+}
+
+.cron-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.cron-field-row {
+  display: grid;
+  grid-template-columns: 7.5rem 6.5rem 1fr;
+  gap: 10px;
+  align-items: baseline;
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  background: var(--bg);
+  font-size: 0.875rem;
+}
+
+.cron-field-name {
+  color: var(--ink-muted);
+}
+
+.cron-field-raw {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--ink);
+}
+
+.cron-field-text {
+  color: var(--ink);
+}
+
+@media (max-width: 560px) {
+  .cron-field-row {
+    grid-template-columns: 6rem 5rem 1fr;
+    font-size: 0.8125rem;
+  }
+}
+
+.cron-run-list {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* biome-ignore lint/style/noDescendingSpecificity: list-item rules follow the list container rule */
+.cron-run-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  background: var(--bg);
+  font-variant-numeric: tabular-nums;
+}
+
+/* biome-ignore lint/style/noDescendingSpecificity: icon sizing for list rows */
+.cron-run-list li svg {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  color: var(--ok);
+}
+
 .lint-list {
   margin: 0.6rem 0 0;
   padding-left: 1.1rem;

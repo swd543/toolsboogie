@@ -319,10 +319,9 @@ export default function LevelPage() {
 
         <Show when={typeof window !== 'undefined' && !window.isSecureContext}>
           <p class="http-note">
-            This page is served over HTTP for now, so your browser may restrict
-            motion sensors — iOS Safari only offers the permission prompt over
-            HTTPS (Android still works over HTTP). The site switches to HTTPS
-            automatically once its domain certificate is issued.
+            This page is served over HTTP for now, so your browser may restrict motion sensors — iOS
+            Safari only offers the permission prompt over HTTPS (Android still works over HTTP). The
+            site switches to HTTPS automatically once its domain certificate is issued.
           </p>
         </Show>
 

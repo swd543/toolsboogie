@@ -31,6 +31,10 @@ upload to. No account, no analytics, no cookies.
   C-locale) or tick from "now", pick any IANA timezone, and get every
   representation at once — epoch (s/ms/µs/ns), ISO 8601, RFC 2822,
   Unix/Windows FILETIME, .NET ticks, Go, Python, and JS — with copy buttons.
+- **Cron builder & explainer** — explain cron expressions in plain English
+  (per-field breakdown + next five fire times in your timezone) and build
+  them back from options; 5-field, 6-field (seconds) and `@`-alias support
+  with classic Vixie/cronie semantics (pure TypeScript).
 - **Compass** — device orientation / WebGeolocation heading with a
   WebGPU-rendered dial (Canvas2D fallback), 16-wind labels and a
   calibration offset.

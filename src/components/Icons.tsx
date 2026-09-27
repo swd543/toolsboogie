@@ -122,6 +122,18 @@ export function TimeIcon(props: IconProps) {
   return <Svg {...props} children={'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>'} />;
 }
 
+/** Cron — clock face with a step tick and a slash (schedule stepping). */
+export function CronIcon(props: IconProps) {
+  return (
+    <Svg
+      {...props}
+      children={
+        '<circle cx="12" cy="12" r="9"/><path d="M12 12V7"/><path d="M12 12l3.5 2"/><path d="M5 17.5l14-11" stroke-opacity="0.55"/>'
+      }
+    />
+  );
+}
+
 /** JWT — key. */
 export function KeyIcon(props: IconProps) {
   return (

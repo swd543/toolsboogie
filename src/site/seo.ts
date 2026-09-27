@@ -76,6 +76,14 @@ export const routeMeta: Record<string, RouteMeta> = {
       'Linux date and JavaScript. 100% in your browser.',
     image: ogImage,
   },
+  '/cron': {
+    title: 'Cron Builder & Explainer — Plain-English Cron, Next Run Times | ToolsBoogie',
+    description:
+      'Explain cron expressions in plain English and build them back: paste a 5- or 6-field cron ' +
+      '(or @alias) to see what it means, a per-field breakdown and the next five fire times in your ' +
+      'timezone, or pick options to generate the expression. 100% in your browser — free, private, no upload.',
+    image: ogImage,
+  },
   '/jwt': {
     title: 'JWT Decoder & Encoder — Decode, Edit & Re-sign Tokens In-Browser | ToolsBoogie',
     description:
@@ -155,6 +163,7 @@ function toolSubcategory(route: string): string {
     case '/yaml-format':
     case '/regex':
     case '/string-escape':
+    case '/cron':
       return 'Developer Tool';
     case '/time':
       return 'Reference';

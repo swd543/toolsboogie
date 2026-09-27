@@ -76,6 +76,7 @@ export interface ToolDef {
     | 'regex'
     | 'escape'
     | 'time'
+    | 'cron'
     | 'key'
     | 'compass'
     | 'ruler'
@@ -124,6 +125,13 @@ export const tools: ToolDef[] = [
     label: 'Date & time',
     blurb: 'Convert timestamps: ISO, epoch, FILETIME, .NET ticks, Python, SQL — any timezone.',
     icon: 'time',
+  },
+  {
+    path: '/cron',
+    label: 'Cron',
+    blurb:
+      'Explain cron schedules in plain English and build them back — next fire times included.',
+    icon: 'cron',
   },
   {
     path: '/jwt',
