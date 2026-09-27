@@ -1197,18 +1197,21 @@ input[type="range"] {
   z-index: 2;
 }
 
-.compass-cardinal {
+/* Fixed heading index (lubber line) at 12 o'clock: the tick aligned with it
+   is your bearing. It never rotates — the needle does (opposite to the
+   device), so the dial stays a stable map. */
+.compass-index {
   position: absolute;
   left: 50%;
-  top: 50%;
-  font-family: var(--font-mono);
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--ink-muted);
-  transform: rotate(var(--compass-rot, 0deg)) translateY(calc(-1 * min(100%, 360px) * 0.36))
-    translate(-50%, -50%);
-  transition: transform 0.1s ease-out;
+  top: 4px;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 9px solid var(--ink);
   pointer-events: none;
+  z-index: 2;
 }
 
 .compass-hint {

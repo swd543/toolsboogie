@@ -134,7 +134,11 @@ export default function CompassPage() {
     faceRef?.dispose();
   });
 
-  const rot = () => `${smoothHeading().toFixed(2)}deg`;
+  /** Needle rotation. The dial is fixed (N at top on screen); the needle
+      must rotate OPPOSITE to the device so it keeps pointing at magnetic
+      north in world space: facing east (h=90) puts north 90° to your LEFT,
+      i.e. the needle rotates -90° (counter-clockwise) on screen. */
+  const rot = () => `-${smoothHeading().toFixed(2)}deg`;
   const label = createMemo(() =>
     started() && everReading()
       ? headingLabel(smoothHeading())
@@ -149,7 +153,7 @@ export default function CompassPage() {
       <ToolPage
         tone="measure"
         title="Compass"
-        lede="A live digital compass from your device's orientation sensors. The dial is rendered with WebGPU (Canvas2D fallback), and the needle is a GPU-composited transform — smooth without re-drawing the face. Works best on phones and tablets."
+        lede="A live digital compass from your device's orientation sensors. Like a real compass, the needle moves opposite to the phone so it keeps pointing at magnetic north; the fixed marker at the top marks the direction you're facing. The dial is a WebGPU shader (Canvas2D fallback). Works best on phones and tablets."
         related={[
           { path: '/level', label: 'Level' },
           { path: '/guitar-tuner', label: 'Guitar tuner' },
@@ -169,9 +173,7 @@ export default function CompassPage() {
               style={`visibility: ${face() ? 'hidden' : 'visible'}`}
             />
             <Show when={started()}>
-              <div class="compass-cardinal" style={{ '--compass-rot': rot() } as any}>
-                N
-              </div>
+              <div class="compass-index" aria-hidden="true" />
               <div class="compass-needle" style={{ '--compass-rot': rot() } as any}>
                 <svg viewBox="0 0 24 110" aria-hidden="true">
                   <path class="compass-needle-n" d="M12 0 L19 55 L12 48 L5 55 Z" />
