@@ -1,0 +1,4 @@
+allowBuilds:
+  esbuild: true
+patchedDependencies:
+  '@solidjs/router@1.0.0': patches/@solidjs__router@1.0.0.patch

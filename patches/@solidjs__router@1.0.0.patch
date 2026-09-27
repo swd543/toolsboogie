@@ -1,0 +1,34 @@
+diff --git a/dist/routing.js b/dist/routing.js
+index f381fe4bd7d414d798fa0201a01f4400086ea81d..f82d4656b421e1b90d4a72d638856e3695a7c0f9 100644
+--- a/dist/routing.js
++++ b/dist/routing.js
+@@ -1,5 +1,5 @@
+ import { runWithOwner, batch } from "solid-js";
+-import { createComponent, createContext, createMemo, createRenderEffect, createSignal, on, onCleanup, untrack, useContext, startTransition, resetErrorBoundaries } from "solid-js";
++import { createComponent, createContext, createMemo, createRenderEffect, createSignal, on, onCleanup, untrack, useContext, startTransition, resetErrorBoundaries, Suspense } from "solid-js";
+ import { isServer, getRequestEvent } from "solid-js/web";
+ import { createBeforeLeave } from "./lifecycle.js";
+ import { mockBase, createMemoObject, extractSearchParams, invariant, resolvePath, createMatcher, joinPaths, scoreRoute, mergeSearchString, expandOptionals } from "./utils.js";
+@@ -566,12 +566,17 @@ export function createRouteContext(router, parent, outlet, match) {
+         pattern,
+         path,
+         outlet: () => component
+-            ? createComponent(component, {
+-                params,
+-                location,
+-                data,
++            ? createComponent(Suspense, {
++                fallback: () => null,
+                 get children() {
+-                    return outlet();
++                    return createComponent(component, {
++                        params,
++                        location,
++                        data,
++                        get children() {
++                            return outlet();
++                        }
++                    });
+                 }
+             })
+             : outlet(),

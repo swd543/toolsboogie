@@ -1,0 +1,18 @@
+{
+  "name": "ToolsBoogie — tools that boogie in your browser",
+  "short_name": "ToolsBoogie",
+  "description": "Free, private browser tools: guitar tuner, JSON/YAML formatter, JWT decode, compass, level and ruler. 100% client-side — your data never leaves your device.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#faf9f6",
+  "theme_color": "#c8451f",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

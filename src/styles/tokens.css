@@ -1,0 +1,91 @@
+/* ------------------------------------------------------------------ */
+/*  Design tokens                                                      */
+/*  Light theme is the base; dark mode follows the OS preference.      */
+/*  Keep this file the single source of truth for visual values.       */
+/* ------------------------------------------------------------------ */
+
+:root {
+  /* Typography */
+  --font-sans:
+    ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, "Helvetica Neue",
+    Arial, sans-serif;
+  --font-mono:
+    ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+
+  /* Surfaces (warm paper) */
+  --bg: #faf9f6;
+  --bg-raised: #ffffff;
+  --bg-sunken: #f1efe9;
+  --bg-inset: #e9e6de;
+
+  /* Ink */
+  --ink: #1a1a1e;
+  --ink-muted: #5c5e66;
+  --ink-faint: #9a9ca3;
+
+  /* Lines */
+  --line: #e2dfd6;
+  --line-strong: #c8c4b6;
+
+  /* Brand */
+  --accent: #c8451f;
+  --accent-hover: #b03c19;
+  --accent-ink: #fff;
+  --accent-soft: rgba(200, 69, 31, 0.08);
+
+  /* Semantic */
+  --ok: #1f7a4d;
+  --ok-soft: rgba(31, 122, 77, 0.1);
+  --warn: #8a5c00;
+  --warn-soft: rgba(154, 103, 0, 0.1);
+  --err: #b3341f;
+  --err-soft: rgba(179, 52, 31, 0.08);
+
+  /* Shape & depth */
+  --radius-s: 8px;
+  --radius-m: 12px;
+  --radius-l: 18px;
+  --shadow-1: 0 1px 2px rgba(24, 20, 12, 0.05), 0 1px 1px rgba(24, 20, 12, 0.04);
+  --shadow-2: 0 4px 16px rgba(24, 20, 12, 0.09);
+  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent);
+
+  /* Layout */
+  --container: 1060px;
+  --header-h: 58px;
+  --gutter: 20px;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #101114;
+    --bg-raised: #17181c;
+    --bg-sunken: #0b0c0e;
+    --bg-inset: #1d1e23;
+
+    --ink: #ededea;
+    --ink-muted: #a3a5ab;
+    --ink-faint: #6d6f76;
+
+    --line: #26272c;
+    --line-strong: #3b3c42;
+
+    --accent: #ff6b45;
+    --accent-hover: #ff7f5c;
+    --accent-ink: #1c0d07;
+    --accent-soft: rgba(255, 107, 69, 0.12);
+
+    --ok: #4cc38a;
+    --ok-soft: rgba(76, 195, 138, 0.12);
+    --warn: #e0b15c;
+    --warn-soft: rgba(224, 177, 92, 0.12);
+    --err: #ff7a5c;
+    --err-soft: rgba(255, 122, 92, 0.12);
+
+    --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.45);
+    --shadow-2: 0 6px 20px rgba(0, 0, 0, 0.5);
+
+    color-scheme: dark;
+  }
+}

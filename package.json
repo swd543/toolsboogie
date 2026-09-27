@@ -1,0 +1,39 @@
+{
+  "name": "toolsboogie",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.13.1",
+  "description": "Handy browser tools that boogie — guitar tuner, JSON/YAML, JWT, compass, level, ruler. 100% client-side. Your data never leaves your device.",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "postbuild": "node scripts/postbuild.mjs",
+    "start": "vite preview",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "wasm": "cd wasm/toolcore && (command -v wasm-pack >/dev/null 2>&1 || PATH=\"$HOME/.cargo/bin:$PATH\") && wasm-pack build . --target web --out-dir pkg --out-name toolcore",
+    "og": "node scripts/og-image.mjs",
+    "predev": "node scripts/copy-assets.mjs",
+    "prebuild": "node scripts/copy-assets.mjs"
+  },
+  "dependencies": {
+    "@solidjs/meta": "^0.29.4",
+    "@solidjs/router": "1.0.0",
+    "@solidjs/start": "^2.0.5",
+    "nitro": "3.0.260903-beta",
+    "solid-js": "^1.9.15"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.14",
+    "@types/node": "^26.6.2",
+    "@webgpu/types": "^0.1.74",
+    "typescript": "^5.5.4",
+    "vite": "^8.0.0",
+    "vitest": "^5.0.1"
+  }
+}

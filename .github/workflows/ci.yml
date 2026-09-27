@@ -1,0 +1,150 @@
+name: CI & Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Pages site parameters — used for the deploy build (base path + absolute URLs).
+  # Topology: repo `swd543/toolsboogie` → *project* site under /toolsboogie/.
+  # The deploy build therefore uses base /toolsboogie/ and the canonical
+  # absolute URL https://swd543.github.io/toolsboogie. The `test` job builds
+  # with base / so the static output can be served from a plain server root.
+  # (If the site ever moves to a custom domain bound to the site ROOT, flip
+  # the deploy VITE_BASE back to / and set VITE_SITE_URL to the custom
+  # domain.)
+  VITE_BASE: /toolsboogie/
+  VITE_SITE_URL: https://swd543.github.io/toolsboogie
+  WASM_PACK_VERSION: "0.13.1"
+
+jobs:
+  # Build the Rust/WASM core from source. The output (wasm/toolcore/pkg) is
+  # uploaded as an artifact and consumed by both builds — no build artifacts
+  # are committed to the repo.
+  wasm:
+    name: Build Rust/WASM core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install wasm-pack (prebuilt binary, no cargo-compile wait)
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          mkdir -p "$HOME/.local/bin"
+          curl -fsSL "https://github.com/rustwasm/wasm-pack/releases/download/v${WASM_PACK_VERSION}/wasm-pack-v${WASM_PACK_VERSION}-x86_64-unknown-linux-musl.tar.gz" -o /tmp/wasm-pack.tgz
+          tar -xzf /tmp/wasm-pack.tgz -C /tmp
+          cp "/tmp/wasm-pack-v${WASM_PACK_VERSION}-x86_64-unknown-linux-musl/wasm-pack" "$HOME/.local/bin/"
+          wasm-pack --version
+
+      - name: Build toolcore (web target)
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          cd wasm/toolcore
+          wasm-pack build . --target web --out-dir pkg --out-name toolcore
+
+      - name: Upload pkg artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: toolcore-pkg
+          path: wasm/toolcore/pkg
+          if-no-files-found: error
+
+  test:
+    name: Typecheck, unit tests
+    runs-on: ubuntu-latest
+    needs: wasm
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download WASM core
+        uses: actions/download-artifact@v4
+        with:
+          name: toolcore-pkg
+          path: wasm/toolcore/pkg
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.13.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Unit tests (incl. real-WASM integration tests)
+        run: pnpm test
+
+      # Production build with base `/` (served from a plain server root)
+      - name: Build (base /)
+        env:
+          VITE_BASE: /
+          VITE_SITE_URL: http://localhost:8899
+        run: |
+          pnpm build
+          node scripts/postbuild.mjs
+
+  deploy:
+    name: Build & deploy to GitHub Pages
+    runs-on: ubuntu-latest
+    needs: [wasm, test]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download WASM core
+        uses: actions/download-artifact@v4
+        with:
+          name: toolcore-pkg
+          path: wasm/toolcore/pkg
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.13.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Pages build: sub-path base + absolute site URL (sitemap/OG/robots)
+      - name: Build for Pages
+        run: |
+          pnpm build
+          node scripts/postbuild.mjs
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
