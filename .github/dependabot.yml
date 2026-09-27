@@ -1,0 +1,37 @@
+# Dependabot version updates.
+#
+# Every Dependabot PR runs the full CI gate (see .github/workflows/ci.yml):
+# WASM core build + cargo tests, typecheck, lint, 122 unit tests and the
+# production static build. The deploy job is main-only, so an update PR can
+# never ship on its own - only a green, merged PR reaches the site.
+version: 2
+updates:
+  # Frontend dependencies (pnpm-lock.yaml, detected via the npm ecosystem)
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: weekly
+    labels:
+      - dependencies
+    commit-message:
+      prefix: "deps"
+
+  # CI workflow actions
+  - package-ecosystem: "github-actions"
+    directory: "/.github/workflows"
+    schedule:
+      interval: weekly
+    labels:
+      - dependencies
+    commit-message:
+      prefix: "deps"
+
+  # Rust/WASM core
+  - package-ecosystem: "cargo"
+    directory: "/wasm/toolcore"
+    schedule:
+      interval: weekly
+    labels:
+      - dependencies
+    commit-message:
+      prefix: "deps(wasm)"
