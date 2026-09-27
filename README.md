@@ -1,5 +1,8 @@
 # ToolsBoogie
 
+**Live at [tools.bugaboxes.com](https://tools.bugaboxes.com)** — every tool below,
+100% client-side, no uploads, no accounts, no tracking.
+
 Free, secure and private browser tools — everything runs 100% client-side,
 right in your browser. Nothing is ever uploaded: there is no backend to
 upload to. No account, no analytics, no cookies.

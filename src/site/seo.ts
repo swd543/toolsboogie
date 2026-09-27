@@ -7,6 +7,14 @@
  */
 import { site, siteUrl } from './config';
 
+/**
+ * Canonical URL for a route: site origin + trailing slash (the final URL
+ * after GitHub Pages' directory redirect). Used for canonical, og:url and
+ * JSON-LD so every signal points at the same address.
+ */
+export const canonicalFor = (route: string): string =>
+  `${siteUrl}${route === '/' ? '/' : `${route}/`}`;
+
 export interface RouteMeta {
   title: string;
   description: string;
@@ -129,7 +137,7 @@ export function jsonLdFor(route: string): Record<string, unknown> {
   const base = {
     '@context': 'https://schema.org',
     name: site.name,
-    url: `${siteUrl}${route === '/' ? '' : route}`,
+    url: canonicalFor(route),
     description: meta.description,
     image: meta.image,
   };

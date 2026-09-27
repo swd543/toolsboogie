@@ -175,6 +175,9 @@ export function Shell(props: { children?: JSX.Element }) {
               <a href={t.path}>{t.label}</a>
             ))}
             <a href="/privacy">Privacy</a>
+            <a href={site.github} target="_blank" rel="noreferrer">
+              Source on GitHub
+            </a>
           </nav>
           <div class="donate">
             <span class="donate-label">

@@ -27,6 +27,8 @@ export const site = {
   fallbackUrl: 'http://localhost:3000',
   /** Contact shown on the privacy page (AdSense requires a contact path). */
   contactEmail: 'swd543@gmail.com',
+  /** Public source repository (footer link). */
+  github: 'https://github.com/swd543/toolsboogie',
   /** AdSense publisher id; empty string = ad-free build. */
   adsenseClient: (import.meta.env.VITE_ADSENSE_CLIENT as string | undefined) ?? '',
   /**

@@ -62,7 +62,7 @@ const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 ${routes
   .map(
     (r) => `  <url>
-    <loc>${siteUrl}${r === '/' ? '' : r}</loc>
+    <loc>${siteUrl}${r === '/' ? '/' : r + '/'}</loc>
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
   </url>`,
