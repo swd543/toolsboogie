@@ -104,7 +104,7 @@ export default function LevelPage() {
     const line = dark ? '#33343a' : '#d8d5cc';
     const ink = dark ? '#e4e2da' : '#34322c';
     const ok = dark ? '#4cc286' : '#1f7a4d';
-    const accent = dark ? '#ff6a44' : '#c8451f';
+    const accent = dark ? '#4dd6c8' : '#0b7285';
 
     g.clearRect(0, 0, size, size);
     g.beginPath();

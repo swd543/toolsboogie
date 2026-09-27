@@ -102,7 +102,8 @@ const notFound = `<!doctype html>
   main { text-align: center; padding: 2rem; max-width: 26rem; }
   h1 { font-size: 2rem; margin: 0 0 0.75rem; }
   p { opacity: 0.7; }
-  a.btn { display: inline-block; margin-top: 1rem; background: #c8451f; color: #fff; text-decoration: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; }
+  a.btn { display: inline-block; margin-top: 1rem; background: #0b7285; color: #fff; text-decoration: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; }
+  @media (prefers-color-scheme: dark) { a.btn { background: #4dd6c8; color: #04211d; } }
 </style>
 </head>
 <body>

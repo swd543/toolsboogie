@@ -79,7 +79,7 @@ export function Document(props: DocumentComponentProps) {
         <meta name="twitter:card" content="summary" />
         <link rel="icon" href={`${base}favicon.svg`} type="image/svg+xml" />
         <link rel="manifest" href={`${base}manifest.webmanifest`} />
-        <meta name="theme-color" content="#c8451f" />
+        <meta name="theme-color" content="#0b7285" />
         {props.assets}
       </head>
       <body>

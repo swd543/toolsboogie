@@ -27,11 +27,11 @@
   --line: #e2dfd6;
   --line-strong: #c8c4b6;
 
-  /* Brand */
-  --accent: #c8451f;
-  --accent-hover: #b03c19;
+  /* Brand (teal — the rust complement; contrast-checked on both themes) */
+  --accent: #0b7285;
+  --accent-hover: #0a5f6b;
   --accent-ink: #fff;
-  --accent-soft: rgba(200, 69, 31, 0.08);
+  --accent-soft: rgba(11, 114, 133, 0.08);
 
   /* Semantic */
   --ok: #1f7a4d;
@@ -71,10 +71,10 @@
     --line: #26272c;
     --line-strong: #3b3c42;
 
-    --accent: #ff6b45;
-    --accent-hover: #ff7f5c;
-    --accent-ink: #1c0d07;
-    --accent-soft: rgba(255, 107, 69, 0.12);
+    --accent: #4dd6c8;
+    --accent-hover: #6ee0d4;
+    --accent-ink: #04211d;
+    --accent-soft: rgba(77, 214, 200, 0.12);
 
     --ok: #4cc38a;
     --ok-soft: rgba(76, 195, 138, 0.12);

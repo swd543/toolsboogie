@@ -121,7 +121,7 @@ fn fs_main(@builtin(position) pos: vec4<f32>) -> loc0: vec4<f32> {
   let face = mix(vec3<f32>(0.98, 0.98, 0.97), vec3<f32>(0.09, 0.095, 0.11), u.theme);
   let ink  = mix(vec3<f32>(0.16, 0.15, 0.13), vec3<f32>(0.92, 0.92, 0.90), u.theme);
   let line = mix(vec3<f32>(0.72, 0.70, 0.63), vec3<f32>(0.30, 0.30, 0.33), u.theme);
-  let accent = mix(vec3<f32>(0.78, 0.27, 0.12), vec3<f32>(1.0, 0.42, 0.27), u.theme);
+  let accent = mix(vec3<f32>(0.043, 0.447, 0.522), vec3<f32>(0.302, 0.839, 0.784), u.theme);
 
   var color = face;
   var alpha = 0.0;
@@ -255,7 +255,7 @@ fn fs_main(@builtin(position) pos: vec4<f32>) -> loc0: vec4<f32> {
   let face = mix(vec3<f32>(0.98, 0.98, 0.97), vec3<f32>(0.09, 0.095, 0.11), u.theme);
   let ink  = mix(vec3<f32>(0.16, 0.15, 0.13), vec3<f32>(0.92, 0.92, 0.90), u.theme);
   let line = mix(vec3<f32>(0.78, 0.76, 0.70), vec3<f32>(0.26, 0.26, 0.29), u.theme);
-  let accent = mix(vec3<f32>(0.78, 0.27, 0.12), vec3<f32>(1.0, 0.42, 0.27), u.theme);
+  let accent = mix(vec3<f32>(0.043, 0.447, 0.522), vec3<f32>(0.302, 0.839, 0.784), u.theme);
   let ok = mix(vec3<f32>(0.12, 0.48, 0.30), vec3<f32>(0.30, 0.76, 0.54), u.theme);
 
   var color = face;

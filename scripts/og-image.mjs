@@ -103,7 +103,7 @@ function textWidth(text, scale) {
 
 const BG = [16, 17, 20]; // #101114
 const INK = [237, 237, 234]; // #EDEDEA
-const ACCENT = [255, 107, 69]; // #FF6B45
+const ACCENT = [77, 214, 200]; // #4DD6C8 (teal, dark-theme variant)
 const MUTED = [163, 165, 171]; // #A3A5AB
 
 // Background
