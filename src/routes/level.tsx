@@ -8,7 +8,7 @@
  * "Calibrate" captures the current offset as the new zero — useful when the
  * device rests in a holder or a slightly-bent case.
  */
-import { createMemo, createSignal, onCleanup, Show } from 'solid-js';
+import { createEffect, createMemo, createSignal, onCleanup, Show } from 'solid-js';
 import { AdSlot } from '~/components/AdSlot';
 import { AlertIcon, RefreshIcon } from '~/components/Icons';
 import { RouteMeta } from '~/components/RouteMeta';
@@ -31,6 +31,10 @@ export default function LevelPage() {
   const [cal, setCal] = createSignal<LevelCalibration | null>(null);
   const [started, setStarted] = createSignal(false);
   const [surface, setSurface] = createSignal<LevelSurface | null>(null);
+  /** Demo mode: sliders drive the same pipeline when no sensor is present. */
+  const [demoOn, setDemoOn] = createSignal(false);
+  const [demoBeta, setDemoBeta] = createSignal(0);
+  const [demoGamma, setDemoGamma] = createSignal(0);
 
   let cleanupTilt: (() => void) | null = null;
   let surfRef: LevelSurface | null = null;
@@ -43,8 +47,14 @@ export default function LevelPage() {
   const [theme, setTheme] = createSignal(themeQuery?.matches ? 1 : 0);
   themeQuery?.addEventListener('change', (e) => setTheme(e.matches ? 1 : 0));
 
-  /** Calibrated readings (the UI + shader consume this). */
+  /** Effective tilt: sensor readings (calibrated) or the demo sliders. */
   const eff = createMemo(() => {
+    if (demoOn()) {
+      const beta = demoBeta();
+      const gamma = demoGamma();
+      const angle = Math.hypot(beta, gamma);
+      return { beta, gamma, angle, level: levelness(angle) };
+    }
     const r = reading();
     if (!r) return null;
     const { beta, gamma } = applyCalibration(r.beta, r.gamma, cal());
@@ -52,11 +62,13 @@ export default function LevelPage() {
     return { beta, gamma, angle, level: levelness(angle) };
   });
 
-  /** Feed the WebGPU surface (or the 2D loop reads the same signal). */
-  createMemo(() => {
+  /** Feed the surface (WebGPU or the 2D fallback) whenever the tilt changes.
+      A createEffect — not a memo — so the fallback canvas redraws too. */
+  createEffect(() => {
     const e = eff();
     if (!e) return;
     surfRef?.set(clamp01(e.gamma / 15), clamp01(e.beta / 15), e.level);
+    if (!surfRef) drawFallbackFrame();
   });
 
   const start = async () => {
@@ -69,8 +81,6 @@ export default function LevelPage() {
     cleanupTilt = watchTilt(
       (r) => {
         setReading(r);
-        // Canvas2D fallback: draw a frame whenever the reading changes.
-        if (!surfRef && fallbackCanvas) drawFallbackFrame();
       },
       (s) => setStatus(s),
     );
@@ -83,12 +93,18 @@ export default function LevelPage() {
     setCal({ beta: r.beta, gamma: r.gamma });
   };
 
-  /* ---------- Canvas2D fallback drawing ---------- */
+  /* ---------- Canvas2D fallback drawing ----------
 
-  const drawFallbackFrame = () => {
+  Function declaration (not const) so it is hoisted: the createEffect above
+  may call it during the first synchronous run, before this binding's source
+  position is reached. */
+
+  function drawFallbackFrame() {
     const c = fallbackCanvas;
-    const e = eff();
-    if (!c || !e) return;
+    if (!c) return;
+    // No reading yet (or demo): draw the placeholder — centered bubble,
+    // neutral ring — so the face is never blank.
+    const e = eff() ?? { beta: 0, gamma: 0, angle: 0, level: 0 };
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const size = Math.round(c.clientWidth * dpr);
     if (size <= 0) return;
@@ -164,7 +180,7 @@ export default function LevelPage() {
     g.lineWidth = 2 * dpr;
     g.strokeStyle = ink;
     g.stroke();
-  };
+  }
 
   /* ---------- surface setup (WebGPU, then 2D loop) ---------- */
 
@@ -205,20 +221,11 @@ export default function LevelPage() {
     const e = eff();
     return e !== null && e.level >= 0.98;
   });
-  const tiltDeg = createMemo(() => {
-    const r = reading();
-    if (!r) return null;
-    const { beta, gamma } = applyCalibration(r.beta, r.gamma, cal());
-    return Math.hypot(beta, gamma);
-  });
-  const betaDeg = createMemo(() => {
-    const r = reading();
-    return r ? r.beta : null;
-  });
-  const gammaDeg = createMemo(() => {
-    const r = reading();
-    return r ? r.gamma : null;
-  });
+  /** Readouts follow the effective tilt (sensor OR demo), so the demo
+      sliders are reflected here too. */
+  const tiltDeg = createMemo(() => eff()?.angle ?? null);
+  const betaDeg = createMemo(() => eff()?.beta ?? null);
+  const gammaDeg = createMemo(() => eff()?.gamma ?? null);
   const tiltText = createMemo(() => {
     const v = tiltDeg();
     return v !== null ? `${v.toFixed(1)}°` : '—';
@@ -238,7 +245,7 @@ export default function LevelPage() {
       <ToolPage
         tone="measure"
         title="Level"
-        lede="Turn your device into a bubble level. The surface is a WebGPU shader (Canvas2D fallback) with a target ring that turns green when you're flat; degree readout and a calibrate button cover the rest. Accelerometer data never leaves the device."
+        lede="Turn your device into a bubble level. The surface is a WebGPU shader (Canvas2D fallback) with a target ring that turns green when you're flat; degree readout, a calibrate button and a no-sensors demo (drag the sliders) cover the rest. Sensor data never leaves the device."
         related={[
           { path: '/compass', label: 'Compass' },
           { path: '/ruler', label: 'Ruler' },
@@ -305,26 +312,70 @@ export default function LevelPage() {
 
         <ToolColumns
           aside={
-            <div class="opt-group">
-              <span class="opt-label">Notes</span>
-              <p class="opt-hint">
-                “Tilt” is the combined angle from flat; the ring glows green within 0.5°. Hold the
-                device face-up for stable readings — the bubble shows which way to tilt.
-              </p>
-              <p class="opt-hint">
-                Calibrate if the device rests in a case or holder; the offset is applied until you
-                disable the sensor or reload.
-              </p>
-              <Show when={status() === 'denied'}>
-                <div class="error-card">
-                  <AlertIcon />
-                  <p>
-                    Motion permission was denied. Allow motion & orientation access in your browser
-                    settings.
+            <>
+              <div class="opt-group">
+                <span class="opt-label">Demo — no motion sensors?</span>
+                <label class="toggle">
+                  <input
+                    type="checkbox"
+                    checked={demoOn()}
+                    onChange={(e) => setDemoOn(e.currentTarget.checked)}
+                  />
+                  <span class="knob" />
+                  <span class="toggle-text">Simulate tilt with sliders</span>
+                </label>
+                <Show when={demoOn()}>
+                  <label class="range-row">
+                    <span class="range-key">top↔bottom</span>
+                    <input
+                      type="range"
+                      min={-15}
+                      max={15}
+                      step={0.1}
+                      value={demoBeta()}
+                      onInput={(e) => setDemoBeta(parseFloat(e.currentTarget.value))}
+                    />
+                    <output>{demoBeta().toFixed(1)}°</output>
+                  </label>
+                  <label class="range-row">
+                    <span class="range-key">left↔right</span>
+                    <input
+                      type="range"
+                      min={-15}
+                      max={15}
+                      step={0.1}
+                      value={demoGamma()}
+                      onInput={(e) => setDemoGamma(parseFloat(e.currentTarget.value))}
+                    />
+                    <output>{demoGamma().toFixed(1)}°</output>
+                  </label>
+                  <p class="opt-hint">
+                    The sliders drive the exact pipeline the sensor uses — watch the bubble, the
+                    ring and the readout react.
                   </p>
-                </div>
-              </Show>
-            </div>
+                </Show>
+              </div>
+              <div class="opt-group">
+                <span class="opt-label">Notes</span>
+                <p class="opt-hint">
+                  “Tilt” is the combined angle from flat; the ring glows green within 0.5°. Hold the
+                  device face-up for stable readings — the bubble shows which way to tilt.
+                </p>
+                <p class="opt-hint">
+                  Calibrate if the device rests in a case or holder; the offset is applied until you
+                  disable the sensor or reload.
+                </p>
+                <Show when={status() === 'denied'}>
+                  <div class="error-card">
+                    <AlertIcon />
+                    <p>
+                      Motion permission was denied. Allow motion & orientation access in your
+                      browser settings.
+                    </p>
+                  </div>
+                </Show>
+              </div>
+            </>
           }
         >
           <AdSlot slot="tool-bottom" />

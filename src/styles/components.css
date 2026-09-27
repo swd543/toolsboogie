@@ -683,6 +683,17 @@ input[type="range"] {
   text-align: right;
 }
 
+.range-key {
+  flex: 0 0 auto;
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+  min-width: 82px;
+}
+
+.opt-group .range-row {
+  margin-top: 0.5rem;
+}
+
 /* toggle */
 /* biome-ignore lint/style/noDescendingSpecificity: child-element sizing interleaved with higher-specificity rules */
 .toggle {
