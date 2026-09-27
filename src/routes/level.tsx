@@ -168,7 +168,7 @@ export default function LevelPage() {
     const br = R * 0.24;
     const body = e.level > 0.95 ? ok : accent;
     // A slightly darker rim tone so the sphere reads as shaded, not flat.
-    const rim = e.level > 0.95 ? (dark ? '#2f9e6a' : '#14532d') : (dark ? '#8b5cf6' : '#4c1d95');
+    const rim = e.level > 0.95 ? (dark ? '#2f9e6a' : '#14532d') : dark ? '#8b5cf6' : '#4c1d95';
     const grad = g.createRadialGradient(bx - br * 0.35, by - br * 0.35, br * 0.1, bx, by, br);
     grad.addColorStop(0, 'rgba(255,255,255,0.95)');
     grad.addColorStop(0.3, body);
@@ -316,6 +316,15 @@ export default function LevelPage() {
             </button>
           </Show>
         </div>
+
+        <Show when={typeof window !== 'undefined' && !window.isSecureContext}>
+          <p class="http-note">
+            This page is served over HTTP for now, so your browser may restrict
+            motion sensors — iOS Safari only offers the permission prompt over
+            HTTPS (Android still works over HTTP). The site switches to HTTPS
+            automatically once its domain certificate is issued.
+          </p>
+        </Show>
 
         <ToolColumns
           aside={

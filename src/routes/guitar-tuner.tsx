@@ -99,6 +99,11 @@ export default function GuitarTunerPage() {
           'The tuner needs the WASM core, which is missing from this build. Run “pnpm wasm” (requires Rust) and rebuild.',
         );
       }
+      if (typeof window !== 'undefined' && !window.isSecureContext) {
+        throw new Error(
+          'Microphones only work on HTTPS pages. This site is currently served over HTTP while its domain certificate is being issued — it will work as soon as it is live over https.',
+        );
+      }
       stream = await navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
       });

@@ -599,6 +599,17 @@ code {
   font-weight: 400;
 }
 
+.http-note {
+  margin: 14px 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--ink-muted);
+  text-align: center;
+  max-width: 42rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .opt-group .opt-hint {
   font-size: 0.78rem;
   color: var(--ink-faint);
