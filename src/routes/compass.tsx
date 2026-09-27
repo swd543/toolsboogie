@@ -24,10 +24,14 @@ export default function CompassPage() {
   const [status, setStatus] = createSignal<SensorStatus>('unsupported');
   const [heading, setHeading] = createSignal(0);
   const [smooth, setSmooth] = createSignal<number | null>(null);
+  /** Continuous (UNWRAPPED) needle angle. The needle transform is
+      `-needleDeg`, and CSS transitions interpolate numerically — if the
+      angle were the 0..360 heading, crossing north (359° → 1°) would
+      animate a full 358° sweep. Accumulating the per-tick deltas keeps
+      consecutive values close, so the CSS always animates the short arc. */
+  const [needleDeg, setNeedleDeg] = createSignal(0);
   const [everReading, setEverReading] = createSignal(false);
-  const [face, setFace] = createSignal<CompassFace | null>(null);
   const [started, setStarted] = createSignal(false);
-
   let cleanupHeading: (() => void) | null = null;
   let faceRef: CompassFace | null = null;
   let gpuCanvas: HTMLCanvasElement | undefined;
@@ -37,9 +41,20 @@ export default function CompassPage() {
   const themeQuery =
     typeof matchMedia === 'function' ? matchMedia('(prefers-color-scheme: dark)') : null;
   const [theme, setTheme] = createSignal(themeQuery?.matches ? 1 : 0);
+
+  /** Redraw whatever layer is live (base 2D always; WebGPU face when up). */
+  const redraw = () => {
+    drawFallback();
+    try {
+      faceRef?.draw();
+    } catch {
+      /* the 2D base layer stays visible */
+    }
+  };
+
   themeQuery?.addEventListener('change', (e) => {
     setTheme(e.matches ? 1 : 0);
-    faceRef?.draw(); // re-render the face with the new theme
+    redraw();
   });
 
   const smoothHeading = createMemo(() => smooth() ?? heading());
@@ -55,7 +70,22 @@ export default function CompassPage() {
       (r) => {
         setEverReading(true);
         setHeading(r.heading);
-        setSmooth((prev) => emaAngle(prev, r.heading, 0.25));
+        const prev = smooth();
+        const next = prev === null ? r.heading : emaAngle(prev, r.heading, 0.25);
+        if (prev === null) {
+          // First reading (or re-enable): snap the unwrapped angle to the
+          // closest representative of -next so the needle lands correctly
+          // with a minimal jump.
+          let d = (needleDeg() + next) % 360;
+          if (d < 0) d += 360;
+          if (d > 180) d -= 360;
+          setNeedleDeg(needleDeg() - d);
+        } else {
+          // Shortest-arc delta from the previous smoothed heading — never
+          // more than 180°, so the CSS transition always takes the short way.
+          setNeedleDeg(needleDeg() + (((next - prev + 540) % 360) - 180));
+        }
+        setSmooth(next);
       },
       (s) => setStatus(s),
     );
@@ -111,34 +141,48 @@ export default function CompassPage() {
     }
   };
 
-  // Set up the face: WebGPU first, Canvas2D fallback.
+  // Set up the face. Two stacked layers: the Canvas2D dial is ALWAYS drawn
+  // (the visible base layer), then the WebGPU face layers on top. The WebGPU
+  // face only covers the dial circle, so if it ever fails silently (a known
+  // class of mobile-driver bug) the 2D dial underneath remains fully
+  // visible — the compass can never render blank.
   const setupFace = async () => {
+    drawFallback();
     if (gpuCanvas) {
-      const f = await makeCompassFace(gpuCanvas, () => theme());
-      if (f) {
-        faceRef = f;
-        f.draw();
-        setFace(f);
-        return;
+      try {
+        const f = await makeCompassFace(gpuCanvas, () => theme());
+        if (f) {
+          faceRef = f;
+          f.draw();
+          return;
+        }
+      } catch {
+        /* the 2D base layer stays visible */
       }
     }
-    drawFallback();
   };
 
   createEffect(() => {
     void setupFace();
   });
 
+  // Phone rotation / resize: redraw both layers at the new size.
+  const onResize = () => redraw();
+  if (typeof window !== 'undefined') {
+    window.addEventListener('resize', onResize);
+  }
+
   onCleanup(() => {
     cleanupHeading?.();
     faceRef?.dispose();
+    if (typeof window !== 'undefined') window.removeEventListener('resize', onResize);
   });
 
   /** Needle rotation. The dial is fixed (N at top on screen); the needle
       must rotate OPPOSITE to the device so it keeps pointing at magnetic
       north in world space: facing east (h=90) puts north 90° to your LEFT,
       i.e. the needle rotates -90° (counter-clockwise) on screen. */
-  const rot = () => `-${smoothHeading().toFixed(2)}deg`;
+  const rot = () => `${(0 - needleDeg()).toFixed(2)}deg`;
   const label = createMemo(() =>
     started() && everReading()
       ? headingLabel(smoothHeading())
@@ -162,16 +206,8 @@ export default function CompassPage() {
       >
         <div class="compass-stage">
           <div class="compass">
-            <canvas
-              ref={(el) => (gpuCanvas = el)}
-              class="compass-gpu"
-              data-ready={face() ? 'true' : 'false'}
-            />
-            <canvas
-              ref={(el) => (fallbackCanvas = el)}
-              class="compass-fallback"
-              style={`visibility: ${face() ? 'hidden' : 'visible'}`}
-            />
+            <canvas ref={(el) => (fallbackCanvas = el)} class="compass-fallback" />
+            <canvas ref={(el) => (gpuCanvas = el)} class="compass-gpu" />
             <Show when={started()}>
               <div class="compass-index" aria-hidden="true" />
               <div class="compass-needle" style={{ '--compass-rot': rot() } as any}>

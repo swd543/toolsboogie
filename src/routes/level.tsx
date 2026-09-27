@@ -30,7 +30,6 @@ export default function LevelPage() {
   const [reading, setReading] = createSignal<TiltReading | null>(null);
   const [cal, setCal] = createSignal<LevelCalibration | null>(null);
   const [started, setStarted] = createSignal(false);
-  const [surface, setSurface] = createSignal<LevelSurface | null>(null);
   /** Demo mode: sliders drive the same pipeline when no sensor is present. */
   const [demoOn, setDemoOn] = createSignal(false);
   const [demoBeta, setDemoBeta] = createSignal(0);
@@ -62,13 +61,12 @@ export default function LevelPage() {
     return { beta, gamma, angle, level: levelness(angle) };
   });
 
-  /** Feed the surface (WebGPU or the 2D fallback) whenever the tilt changes.
-      A createEffect — not a memo — so the fallback canvas redraws too. */
+  /** Feed the WebGPU surface whenever the tilt changes. The Canvas2D layer
+      (see the rAF loop in setup) reads eff() itself every frame. */
   createEffect(() => {
     const e = eff();
     if (!e) return;
     surfRef?.set(clamp01(e.gamma / 15), clamp01(e.beta / 15), e.level);
-    if (!surfRef) drawFallbackFrame();
   });
 
   const start = async () => {
@@ -182,26 +180,39 @@ export default function LevelPage() {
     g.stroke();
   }
 
-  /* ---------- surface setup (WebGPU, then 2D loop) ---------- */
+  /* ---------- surface setup ----------
+
+  Two stacked layers, both always present:
+   - Canvas2D (base): its rAF loop runs for the life of the page and draws
+     every frame, so the face is never blank.
+   - WebGPU (top): only opaque where it draws (the face circle). If the
+     surface provably fails (format mismatch, repeated render errors — some
+     mobile drivers fail silently), it is disposed and the base layer shows
+     through the now-inert WebGPU canvas. A blank face is impossible either
+     way. */
 
   const setup = async () => {
-    if (gpuCanvas) {
-      const s = await makeLevelSurface(gpuCanvas, () => theme());
-      if (s) {
-        surfRef = s;
-        setSurface(s);
-        // Prime the first frame.
-        const e = eff();
-        if (e) s.set(clamp01(e.gamma / 15), clamp01(e.beta / 15), e.level);
-        return;
-      }
-    }
-    // No WebGPU: run a lightweight rAF loop on the 2D canvas.
     const loop = () => {
       drawFallbackFrame();
       fallbackRaf = requestAnimationFrame(loop);
     };
     fallbackRaf = requestAnimationFrame(loop);
+    if (gpuCanvas) {
+      const s = await makeLevelSurface(gpuCanvas, () => theme(), {
+        onFailure: () => {
+          surfRef?.dispose();
+          surfRef = null;
+        },
+      });
+      if (s && surfRef === null) {
+        surfRef = s;
+        // Prime the first frame.
+        const e = eff();
+        if (e) s.set(clamp01(e.gamma / 15), clamp01(e.beta / 15), e.level);
+      } else {
+        s?.dispose();
+      }
+    }
   };
 
   // Set up once after first render (canvels must be mounted).
@@ -253,16 +264,8 @@ export default function LevelPage() {
       >
         <div class="level-stage">
           <div class="level-view">
-            <canvas
-              ref={(el) => (gpuCanvas = el)}
-              class="level-gpu"
-              data-ready={surface() ? 'true' : 'false'}
-            />
-            <canvas
-              ref={(el) => (fallbackCanvas = el)}
-              class="level-fallback"
-              style={`visibility: ${surface() ? 'hidden' : 'visible'}`}
-            />
+            <canvas ref={(el) => (fallbackCanvas = el)} class="level-fallback" />
+            <canvas ref={(el) => (gpuCanvas = el)} class="level-gpu" />
           </div>
           <div class="level-readout">
             <div class="stat">

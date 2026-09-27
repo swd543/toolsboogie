@@ -313,6 +313,15 @@ export interface LevelSurface {
   usingGpu: boolean;
 }
 
+export interface LevelSurfaceOptions {
+  /**
+   * Called once when the surface provably fails (canvas format mismatch or
+   * repeated render errors — some mobile drivers fail silently). The caller
+   * should drop the WebGPU layer; the Canvas2D layer underneath takes over.
+   */
+  onFailure?: () => void;
+}
+
 /**
  * Animated level surface. Drives its own rAF loop while alive.
  * `getTheme` returns 0 (light) or 1 (dark).
@@ -320,6 +329,7 @@ export interface LevelSurface {
 export async function makeLevelSurface(
   canvas: HTMLCanvasElement,
   getTheme: () => number,
+  options: LevelSurfaceOptions = {},
 ): Promise<LevelSurface | null> {
   const device = await gpuDevice();
   if (!device) return null;
@@ -332,34 +342,51 @@ export async function makeLevelSurface(
   let tiltY = 0;
   let levelness = 0;
   let raf = 0;
+  let failCount = 0;
+  let failed = false;
 
   const frame = () => {
     if (disposed) return;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const w = Math.max(1, Math.round(canvas.clientWidth * dpr));
-    const h = Math.max(1, Math.round(canvas.clientHeight * dpr));
-    if (canvas.width !== w || canvas.height !== h) {
-      canvas.width = w;
-      canvas.height = h;
+    try {
+      const tex = ctx.getCurrentTexture();
+      // Format mismatch (pipeline target vs. the canvas's actual texture)
+      // would fail the render pass — treat it as a surface failure.
+      if (tex.format !== canvasFormat()) throw new Error('canvas format mismatch');
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const w = Math.max(1, Math.round(canvas.clientWidth * dpr));
+      const h = Math.max(1, Math.round(canvas.clientHeight * dpr));
+      if (canvas.width !== w || canvas.height !== h) {
+        canvas.width = w;
+        canvas.height = h;
+      }
+      writeUniform(uniform, device, w, h, [tiltX, tiltY, levelness, getTheme(), 0]);
+      const enc = device.createCommandEncoder();
+      const pass = enc.beginRenderPass({
+        colorAttachments: [
+          {
+            view: tex.createView(),
+            clearValue: { r: 0, g: 0, b: 0, a: 0 },
+            loadOp: 'clear',
+            storeOp: 'discard',
+          },
+        ],
+      });
+      pass.setPipeline(pipeline);
+      pass.setBindGroup(0, bindGroup);
+      pass.draw(3);
+      pass.end();
+      device.queue.submit([enc.finish()]);
+      failCount = 0;
+    } catch {
+      // Some drivers fail validation/execution without raising device
+      // events. Three consecutive bad frames = the surface is dead.
+      failCount += 1;
+      if (failCount >= 3 && !failed) {
+        failed = true;
+        options.onFailure?.();
+      }
     }
-    writeUniform(uniform, device, w, h, [tiltX, tiltY, levelness, getTheme(), 0]);
-    const enc = device.createCommandEncoder();
-    const pass = enc.beginRenderPass({
-      colorAttachments: [
-        {
-          view: ctx.getCurrentTexture().createView(),
-          clearValue: { r: 0, g: 0, b: 0, a: 0 },
-          loadOp: 'clear',
-          storeOp: 'discard',
-        },
-      ],
-    });
-    pass.setPipeline(pipeline);
-    pass.setBindGroup(0, bindGroup);
-    pass.draw(3);
-    pass.end();
-    device.queue.submit([enc.finish()]);
-    raf = requestAnimationFrame(frame);
+    if (!disposed) raf = requestAnimationFrame(frame);
   };
   raf = requestAnimationFrame(frame);
 

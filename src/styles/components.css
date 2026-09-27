@@ -1146,12 +1146,10 @@ input[type="range"] {
   display: block;
 }
 
+/* WebGPU layer sits above the 2D base layer; it is only opaque where it
+   draws, so a silent WebGPU failure can never blank the compass. */
 .compass-gpu {
-  visibility: hidden; /* revealed once the WebGPU frame renders */
-}
-
-.compass-gpu[data-ready="true"] {
-  visibility: visible;
+  z-index: 1;
 }
 
 .compass-needle {
@@ -1251,12 +1249,10 @@ input[type="range"] {
   display: block;
 }
 
+/* WebGPU layer sits above the 2D base layer (which always draws), so a
+   silent WebGPU failure can never blank the level face. */
 .level-gpu {
-  visibility: hidden;
-}
-
-.level-gpu[data-ready="true"] {
-  visibility: visible;
+  z-index: 1;
 }
 
 .level-readout {
