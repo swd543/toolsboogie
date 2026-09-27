@@ -67,6 +67,7 @@ export default function YamlFormatPage() {
     <>
       <RouteMeta path="/yaml-format" />
       <ToolPage
+        tone="dev"
         title="YAML format & validate"
         lede="Re-format YAML with consistent indentation, or convert it to JSON. Invalid YAML gets a precise error location. All local."
         related={[

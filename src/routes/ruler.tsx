@@ -1,12 +1,15 @@
 /**
- * Ruler — a calibrated on-screen ruler.
+ * Ruler — a literal on-screen ruler with two edges:
+ * metric (cm) read at the LEFT end, imperial (inches) at the RIGHT.
  *
- * No device APIs involved (which is honest: browsers can't know your
- * screen size). You calibrate once — screen width/height in cm/inches, or
- * PPI — and the ruler renders in CSS pixels with real-world scale, plus
- * two-point measuring. Calibration persists in localStorage.
+ * Calibration infers itself from screen conditions — the classic 96-DPI
+ * model scaled by `devicePixelRatio` (DPR 3 phone → 288 PPI) — and is
+ * flagged as an estimate. The user can override it with the display's
+ * real size (cm/mm/inches) or a direct PPI value for exactness. Manual
+ * calibration persists in localStorage; inferred values do not, so a new
+ * device re-infers for itself.
  */
-import { createEffect, createMemo, createSignal, onCleanup, Show } from 'solid-js';
+import { createEffect, createMemo, createSignal, onCleanup, onMount, Show } from 'solid-js';
 import { AdSlot } from '~/components/AdSlot';
 import { CopyIcon } from '~/components/Icons';
 import { RouteMeta } from '~/components/RouteMeta';
@@ -16,6 +19,7 @@ import {
   calibrateFromPpi,
   calibrateFromScreen,
   generateTicks,
+  inferScreenCalibration,
   loadRulerPrefs,
   measurePoints,
   pxToUnit,
@@ -24,10 +28,34 @@ import {
 } from '~/features/ruler/logic';
 import { copyText } from '~/lib/clipboard';
 
+/** Canvas height (CSS px): baseline + ticks + two label rows (cm, in). */
+const RULER_H = 66;
+const TOP = 8;
+const ROW_CM = TOP + 26; // metric label row
+const ROW_IN = TOP + 39; // imperial label row
+
+function inferNow(): Calibration | null {
+  try {
+    if (typeof window === 'undefined') return null;
+    return inferScreenCalibration({
+      widthPx: window.innerWidth,
+      heightPx: window.innerHeight,
+      dpr: window.devicePixelRatio || 1,
+    });
+  } catch {
+    return null;
+  }
+}
+
 export default function RulerPage() {
-  const [cal, setCal] = createSignal<Calibration | null>(loadRulerPrefs()?.calibration ?? null);
-  const [unit, setUnit] = createSignal<Unit>(loadRulerPrefs()?.unit ?? 'mm');
+  // Start empty on both server and client (identical hydration DOM), then
+  // apply stored prefs / the screen inference client-only in onMount.
+  const [cal, setCal] = createSignal<Calibration | null>(null);
+  const [unit, setUnit] = createSignal<Unit>('cm');
   const [copied, setCopied] = createSignal(false);
+  const [viewW, setViewW] = createSignal(0);
+  const [viewH, setViewH] = createSignal(0);
+  const [measuredW, setMeasuredW] = createSignal(0);
 
   let canvas: HTMLCanvasElement | undefined;
   let wrap: HTMLDivElement | undefined;
@@ -41,7 +69,6 @@ export default function RulerPage() {
     b: null,
     active: false,
   };
-  let hover: { x: number; y: number } | null = null;
 
   const persist = () => {
     if (cal()) saveRulerPrefs({ unit: unit(), calibration: cal() });
@@ -52,13 +79,27 @@ export default function RulerPage() {
     persist();
   };
 
-  const applyCalibration = (c: Calibration) => {
+  const applyCalibration = (c: Calibration, doPersist = true) => {
     setCal(c);
-    persist();
+    if (doPersist) persist();
   };
 
-  const widthPx = createMemo(() => wrap?.clientWidth ?? 0);
-  const heightPx = 46;
+  /** Re-derive the estimate from the current viewport (never persisted). */
+  const reinfer = () => {
+    const c = inferNow();
+    if (c) applyCalibration(c, false);
+  };
+
+  // Client-only: restore prefs or infer, and track the viewport size.
+  onMount(() => {
+    const prefs = loadRulerPrefs();
+    if (prefs) setUnit(prefs.unit);
+    setCal(prefs?.calibration ?? inferNow() ?? null);
+    setViewW(window.innerWidth);
+    setViewH(window.innerHeight);
+  });
+
+  const widthPx = createMemo(() => measuredW());
 
   const draw = () => {
     const c = canvas;
@@ -67,44 +108,65 @@ export default function RulerPage() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const w = wrap.clientWidth;
     if (w <= 0) return;
+    if (w !== measuredW()) setMeasuredW(w); // feed the readout memos
     if (c.width !== Math.round(w * dpr)) {
       c.width = Math.round(w * dpr);
-      c.height = Math.round(heightPx * dpr);
+      c.height = Math.round(RULER_H * dpr);
     }
     const g = c.getContext('2d');
     if (!g) return;
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
-    g.clearRect(0, 0, w, heightPx);
+    g.clearRect(0, 0, w, RULER_H);
 
-    const ticks = generateTicks(w, cc, unit());
-    const top = 10;
-    for (const t of ticks) {
+    const { metric, imperial } = generateTicks(w, cc);
+
+    // Ticks: metric and imperial share the zero point; each edge reads its
+    // own labels (metric bottom-left, imperial bottom-right).
+    for (const t of [...metric, ...imperial]) {
       const len = t.kind === 'major' ? 16 : t.kind === 'medium' ? 11 : 7;
       g.beginPath();
-      g.moveTo(t.x, top);
-      g.lineTo(t.x, top + len);
+      g.moveTo(t.x, TOP);
+      g.lineTo(t.x, TOP + len);
       g.lineWidth = t.kind === 'major' ? 1.5 : 1;
       g.strokeStyle = 'var(--ink-muted)';
       g.stroke();
-      if (t.label !== undefined) {
-        g.font = '10px ui-monospace, monospace';
-        g.fillStyle = 'var(--ink-faint)';
-        g.textAlign = 'center';
-        g.fillText(t.label, t.x, top + len + 9);
-      }
     }
+    g.font = '10px ui-monospace, monospace';
+    // Metric labels (left-aligned at their tick, cm). Row 1.
+    for (const t of metric) {
+      if (t.label === undefined) continue;
+      g.fillStyle = 'var(--ink-faint)';
+      g.textAlign = 'left';
+      const mx = t.x < 2 ? 16 : t.x; // first label after the unit hint
+      g.fillText(t.label, Math.min(mx, w - 14), ROW_CM);
+    }
+    // Imperial labels (right-aligned at their tick, inches). Row 2.
+    for (const t of imperial) {
+      if (t.label === undefined) continue;
+      g.fillStyle = 'var(--ink-faint)';
+      g.textAlign = 'right';
+      const ix = t.x < 2 ? 26 : t.x; // first label after the unit hint
+      g.fillText(t.label, Math.min(ix, w - 2), ROW_IN);
+    }
+    // Edge unit hints (left margin of each row).
+    g.font = '9px ui-sans-serif, sans-serif';
+    g.fillStyle = 'var(--ink-faint)';
+    g.textAlign = 'left';
+    g.fillText('cm', 2, ROW_CM);
+    g.fillText('in', 2, ROW_IN);
+
     // Baseline
     g.beginPath();
-    g.moveTo(0, top);
-    g.lineTo(w, top);
+    g.moveTo(0, TOP);
+    g.lineTo(w, TOP);
     g.lineWidth = 1.5;
     g.strokeStyle = 'var(--line-strong)';
     g.stroke();
 
     // Measure points (when both set)
     if (pts.a && pts.b) {
-      const a = { x: pts.a.x, y: top + 8 };
-      const b = { x: pts.b.x, y: top + 8 };
+      const a = { x: pts.a.x, y: TOP + 8 };
+      const b = { x: pts.b.x, y: TOP + 8 };
       g.beginPath();
       g.moveTo(a.x, a.y);
       g.lineTo(b.x, b.y);
@@ -136,12 +198,43 @@ export default function RulerPage() {
     }
   };
 
+  // Full width + viewport size, always in both systems.
+  const fullWidthText = createMemo(() => {
+    const c = cal();
+    if (!c) return '';
+    const w = widthPx() || 0;
+    if (w <= 0) return '';
+    return `${pxToUnit(w, c, 'cm').toFixed(2)} cm · ${pxToUnit(w, c, 'inch').toFixed(3)} in`;
+  });
+
+  const viewportText = createMemo(() => {
+    const c = cal();
+    if (!c) return '';
+    const w = viewW() || 0;
+    const h = viewH() || 0;
+    if (w <= 0 || h <= 0) return '';
+    return `${w}×${h} css px ≈ ${pxToUnit(w, c, 'cm').toFixed(1)} × ${pxToUnit(h, c, 'cm').toFixed(
+      1,
+    )} cm · ${pxToUnit(w, c, 'inch').toFixed(2)} × ${pxToUnit(h, c, 'inch').toFixed(2)} in`;
+  });
+
+  // Track viewport size (for the physical-size readout).
+  createEffect(() => {
+    if (typeof window === 'undefined') return;
+    const onResize = () => {
+      setViewW(window.innerWidth);
+      setViewH(window.innerHeight);
+    };
+    onResize();
+    addEventListener('resize', onResize);
+    onCleanup(() => removeEventListener('resize', onResize));
+  });
+
   // Redraw on resize + calibration change.
   const hasRaf = typeof requestAnimationFrame === 'function';
   createEffect(() => {
     void widthPx();
     void cal();
-    void unit();
     if (!hasRaf) return; // server render — no animation frame
     cancelAnimationFrame(raf);
     raf = requestAnimationFrame(draw);
@@ -154,9 +247,9 @@ export default function RulerPage() {
   const onMove = (e: PointerEvent) => {
     if (!wrap) return;
     const r = wrap.getBoundingClientRect();
-    hover = { x: e.clientX - r.left, y: e.clientY - r.top };
+    const p = { x: e.clientX - r.left, y: e.clientY - r.top };
     if (pts.active && !pts.b) {
-      pts.b = hover;
+      pts.b = p;
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(draw);
     }
@@ -165,8 +258,7 @@ export default function RulerPage() {
   const onDown = (e: PointerEvent) => {
     if (!wrap) return;
     const r = wrap.getBoundingClientRect();
-    const p = { x: e.clientX - r.left, y: e.clientY - r.top };
-    pts.a = p;
+    pts.a = { x: e.clientX - r.left, y: e.clientY - r.top };
     pts.b = null;
     pts.active = true;
     cancelAnimationFrame(raf);
@@ -183,8 +275,9 @@ export default function RulerPage() {
     <>
       <RouteMeta path="/ruler" />
       <ToolPage
+        tone="measure"
         title="On-screen ruler"
-        lede="A straight-edge for your screen: calibrate once with your display's real size (or PPI), then measure distances in millimetres, centimetres or inches. Click-drag on the ruler to measure between two points. The calibration stays on this device."
+        lede="A literal ruler for your screen: metric on the left edge, imperial on the right. It calibrates itself from your screen's pixel density (96 × devicePixelRatio — an estimate, flagged as such); enter your display's real size for exactness. Click-drag to measure between two points."
         related={[
           { path: '/level', label: 'Level' },
           { path: '/compass', label: 'Compass' },
@@ -196,9 +289,9 @@ export default function RulerPage() {
           onPointerMove={onMove}
           onPointerDown={onDown}
           role="img"
-          aria-label="On-screen ruler"
+          aria-label="On-screen ruler: metric centimetres on the left edge, imperial inches on the right edge"
         >
-          <canvas ref={(el) => (canvas = el)} class="ruler-canvas" style="height: 46px" />
+          <canvas ref={(el) => (canvas = el)} class="ruler-canvas" style={`height: ${RULER_H}px`} />
         </div>
         <div class="ruler-measure">
           <span>
@@ -221,18 +314,35 @@ export default function RulerPage() {
               <Show
                 when={cal() !== null}
                 fallback={
-                  <p class="opt-hint">
-                    Not calibrated yet — enter your screen size below. (Measuring a sheet of paper
-                    held against the screen works too, if you don't know your display's specs.)
-                  </p>
+                  <>
+                    <p class="opt-hint">
+                      Not calibrated — re-infer from this screen, or enter your display size below.
+                      (Measuring a sheet of paper held against the screen works too, if you don't
+                      know its specs.)
+                    </p>
+                    <button type="button" class="btn btn-sm btn-ghost" onClick={reinfer}>
+                      Re-infer from screen
+                    </button>
+                  </>
                 }
               >
                 <p class="opt-hint" style="color: var(--color-ok)">
-                  Calibrated: <b>{cal()!.source}</b>
+                  {cal()!.estimated ? 'Estimated:' : 'Calibrated:'} <b>{cal()!.source}</b>
                 </p>
-                <button type="button" class="btn btn-sm btn-ghost" onClick={() => setCal(null)}>
-                  Reset calibration
-                </button>
+                {cal()!.estimated ? (
+                  <p class="opt-hint">
+                    This estimate assumes the classic 96-DPI model scaled by your device pixel
+                    ratio. Enter your screen's real size below for exactness.
+                  </p>
+                ) : null}
+                <div style="display: flex; gap: 0.5rem">
+                  <button type="button" class="btn btn-sm btn-ghost" onClick={reinfer}>
+                    Re-infer from screen
+                  </button>
+                  <button type="button" class="btn btn-sm btn-ghost" onClick={() => setCal(null)}>
+                    Reset
+                  </button>
+                </div>
               </Show>
 
               <div class="field">
@@ -282,10 +392,10 @@ export default function RulerPage() {
               </div>
 
               <span class="opt-label" style="margin-top: 0.75rem">
-                Display unit
+                Measure in
               </span>
               <div class="flag-row">
-                {(['mm', 'cm', 'inch'] as Unit[]).map((u) => (
+                {(['cm', 'mm', 'inch'] as Unit[]).map((u) => (
                   <button
                     type="button"
                     class={`chip ${unit() === u ? 'is-on' : ''}`}
@@ -307,10 +417,13 @@ export default function RulerPage() {
             <span class="opt-label">Reading</span>
             <p class="opt-hint">
               {cal()
-                ? `Full width: ${pxToUnit(widthPx() || 0, cal()!, unit()) === 0 ? '—' : formatTotal()}`
-                : 'Set a calibration to read lengths.'}{' '}
-              The ruler uses your browser's CSS pixels, so zoom affects it — keep browser zoom at
-              100%.
+                ? `Full width: ${fullWidthText() || '—'}`
+                : 'Re-infer or calibrate to read lengths.'}{' '}
+              {viewportText() !== ''
+                ? `Viewport: ${viewportText()}${cal()!.estimated ? ' (estimated)' : ''}`
+                : ''}{' '}
+              The ruler uses your browser's CSS pixels, so browser zoom scales it — keep zoom at
+              100% for real-world readings.
             </p>
           </div>
           <AdSlot slot="tool-bottom" />
@@ -318,15 +431,4 @@ export default function RulerPage() {
       </ToolPage>
     </>
   );
-
-  function formatTotal(): string {
-    const c = cal();
-    if (!c) return '';
-    const v = pxToUnit(widthPx() || 0, c, unit());
-    return unit() === 'mm'
-      ? `${v.toFixed(1)} mm`
-      : unit() === 'cm'
-        ? `${v.toFixed(2)} cm`
-        : `${v.toFixed(3)} in`;
-  }
 }

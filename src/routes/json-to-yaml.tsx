@@ -61,6 +61,7 @@ export default function JsonToYamlPage() {
     <>
       <RouteMeta path="/json-to-yaml" />
       <ToolPage
+        tone="dev"
         title="JSON to YAML"
         lede="Convert JSON to clean, human-friendly YAML — keys, nesting and arrays rendered the way YAML users expect. Runs entirely in your browser."
         related={[

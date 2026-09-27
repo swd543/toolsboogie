@@ -110,6 +110,7 @@ export default function TimePage() {
     <>
       <RouteMeta path="/time" />
       <ToolPage
+        tone="dev"
         title="Date & time converter"
         lede="Turn any timestamp into any other: ISO 8601, RFC 2822, epoch (seconds to nanoseconds), Windows FILETIME, .NET ticks, SQL — rendered in the timezone you choose, with copy-ready snippets for Python, pandas, Go, C, Linux and JavaScript."
         related={[

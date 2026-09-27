@@ -151,6 +151,7 @@ export default function GuitarTunerPage() {
     <>
       <RouteMeta path="/guitar-tuner" />
       <ToolPage
+        tone="guitar"
         title="Guitar tuner"
         lede="Tap a string and watch the gauge. A YIN pitch detector runs on 8192-sample frames from your microphone — note, cents and frequency update live, and the spectrum shows what it hears. Nothing is recorded or sent anywhere."
         related={[

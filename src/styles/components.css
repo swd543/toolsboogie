@@ -43,15 +43,10 @@
 
 .site-nav {
   display: flex;
+  align-items: center;
   gap: 0.25rem;
   margin-left: auto;
-  min-width: 0; /* allow the flex item to shrink → nav scrolls internally on mobile */
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.site-nav::-webkit-scrollbar {
-  display: none;
+  min-width: 0;
 }
 
 /* Long tokens (JWTs, wallet addresses, hashes) must not force horizontal scroll. */
@@ -59,7 +54,8 @@ code {
   overflow-wrap: anywhere;
 }
 
-.site-nav a {
+.site-nav a,
+.site-nav .nav-drop-btn {
   color: var(--ink-muted);
   font-size: 0.9rem;
   font-weight: 500;
@@ -67,18 +63,111 @@ code {
   border-radius: 999px;
   white-space: nowrap;
   text-decoration: none;
+  background: none;
+  border: none;
+  font-family: inherit;
+  cursor: pointer;
 }
 
-.site-nav a:hover {
+.site-nav a:hover,
+.site-nav .nav-drop-btn:hover {
   color: var(--ink);
   background: var(--bg-sunken);
   text-decoration: none;
 }
 
-.site-nav a[aria-current="page"] {
+.site-nav a[aria-current="page"],
+.site-nav .nav-drop-btn[data-active] {
   color: var(--accent);
   background: var(--accent-soft);
   font-weight: 600;
+}
+
+/* Grouped nav: disclosure buttons + dropdown panels (group accent via tone). */
+.nav-group {
+  position: relative;
+  display: inline-flex;
+}
+
+/* biome-ignore lint/style/noDescendingSpecificity: group controls interleaved with higher-specificity rules */
+.nav-drop-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.nav-drop-btn .chev {
+  width: 12px;
+  height: 12px;
+  transition: transform 0.15s ease;
+}
+
+.nav-drop-btn[aria-expanded="true"] .chev {
+  transform: rotate(180deg);
+}
+
+.nav-drop {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  z-index: 40;
+  min-width: 185px;
+  padding: 0.35rem;
+  margin: 0;
+  list-style: none;
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-2);
+  text-align: left;
+}
+
+.nav-drop a {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 1px 0;
+  padding: 0.45rem 0.65rem;
+  border-radius: var(--radius-s);
+  font-size: 0.875rem;
+}
+
+.nav-drop a:hover {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.nav-drop a[aria-current="page"] {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* Group accent dot (inherited --accent from the tone class). */
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex: none;
+}
+
+.site-nav > a .dot {
+  margin-right: 0.45rem;
+}
+
+.site-nav > a {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Transparent click-away layer behind open dropdowns. */
+.nav-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: transparent;
+  border: none;
+  cursor: default;
 }
 
 .site-footer {
@@ -222,6 +311,59 @@ code {
 
 .tool-page {
   padding-top: 0.5rem;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Tool-group accents                                                 */
+/*  Each tool group gets its own accent hue (scoped via CSS custom     */
+/*  properties on .tool-page); the shared components pick them up      */
+/*  through var(--accent / --accent-hover / --accent-ink /             */
+/*  --accent-soft). Every value is contrast-checked on both themes     */
+/*  (light: ≥5.5:1 on paper, ≥5.5:1 for --accent-ink on accent;        */
+/*  dark:  ≥6.5:1 on surfaces, ≥6.5:1 for --accent-ink on accent).     */
+/*                                                                      */
+/*  guitar (tuner)        — amber  #8a5a00 / #f5c542                   */
+/*  measurement (dev-free) — violet #6d28d9 / #a78bfa                  */
+/*  devtools              — blue   #1d4ed8 / #60a5fa                   */
+/* ------------------------------------------------------------------ */
+.tone-guitar {
+  --accent: #8a5a00;
+  --accent-hover: #734900;
+  --accent-ink: #fff;
+  --accent-soft: rgba(138, 90, 0, 0.08);
+}
+.tone-measure {
+  --accent: #6d28d9;
+  --accent-hover: #5b21b6;
+  --accent-ink: #fff;
+  --accent-soft: rgba(109, 40, 217, 0.08);
+}
+.tone-dev {
+  --accent: #1d4ed8;
+  --accent-hover: #1e40af;
+  --accent-ink: #fff;
+  --accent-soft: rgba(29, 78, 216, 0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  .tone-guitar {
+    --accent: #f5c542;
+    --accent-hover: #f8d16b;
+    --accent-ink: #241a02;
+    --accent-soft: rgba(245, 197, 66, 0.12);
+  }
+  .tone-measure {
+    --accent: #a78bfa;
+    --accent-hover: #b8a3fb;
+    --accent-ink: #1d1038;
+    --accent-soft: rgba(167, 139, 250, 0.12);
+  }
+  .tone-dev {
+    --accent: #60a5fa;
+    --accent-hover: #7db8fc;
+    --accent-ink: #0a1e3f;
+    --accent-soft: rgba(96, 165, 250, 0.12);
+  }
 }
 
 .tool-intro {
@@ -929,6 +1071,7 @@ input[type="range"] {
   margin-top: 0.75rem;
 }
 
+/* biome-ignore lint/style/noDescendingSpecificity: status dot interleaved with higher-specificity rules */
 .mic-status .dot {
   width: 8px;
   height: 8px;

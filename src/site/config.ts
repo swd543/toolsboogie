@@ -140,7 +140,8 @@ export const tools: ToolDef[] = [
   {
     path: '/ruler',
     label: 'Ruler',
-    blurb: 'A calibrated on-screen ruler — measure in mm, cm or inches.',
+    blurb:
+      'A dual-edge on-screen ruler — metric left, imperial right — that calibrates itself from your screen.',
     icon: 'ruler',
   },
   {

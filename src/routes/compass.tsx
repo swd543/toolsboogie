@@ -147,6 +147,7 @@ export default function CompassPage() {
     <>
       <RouteMeta path="/compass" />
       <ToolPage
+        tone="measure"
         title="Compass"
         lede="A live digital compass from your device's orientation sensors. The dial is rendered with WebGPU (Canvas2D fallback), and the needle is a GPU-composited transform — smooth without re-drawing the face. Works best on phones and tablets."
         related={[

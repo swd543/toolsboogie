@@ -104,7 +104,7 @@ export default function LevelPage() {
     const line = dark ? '#33343a' : '#d8d5cc';
     const ink = dark ? '#e4e2da' : '#34322c';
     const ok = dark ? '#4cc286' : '#1f7a4d';
-    const accent = dark ? '#4dd6c8' : '#0b7285';
+    const accent = dark ? '#a78bfa' : '#6d28d9'; // measurement-group violet
 
     g.clearRect(0, 0, size, size);
     g.beginPath();
@@ -236,6 +236,7 @@ export default function LevelPage() {
     <>
       <RouteMeta path="/level" />
       <ToolPage
+        tone="measure"
         title="Level"
         lede="Turn your device into a bubble level. The surface is a WebGPU shader (Canvas2D fallback) with a target ring that turns green when you're flat; degree readout and a calibrate button cover the rest. Accelerometer data never leaves the device."
         related={[

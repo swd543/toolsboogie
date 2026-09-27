@@ -91,10 +91,10 @@ export const routeMeta: Record<string, RouteMeta> = {
     image: ogImage,
   },
   '/ruler': {
-    title: 'Online Ruler — Measure on Your Screen (mm, cm, inches) | ToolsBoogie',
+    title: 'Online Ruler — Metric & Imperial On-Screen Ruler | ToolsBoogie',
     description:
-      'A calibrated on-screen ruler: set your screen size once and measure distances in millimetres, ' +
-      'centimetres or inches — straight in the browser. Free and private.',
+      'A dual-edge on-screen ruler — centimetres on the left, inches on the right. It calibrates itself from your screen ' +
+      'or takes your display size, and measures any distance in the browser. Free, private, no upload.',
     image: ogImage,
   },
   '/level': {

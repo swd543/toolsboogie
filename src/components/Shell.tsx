@@ -3,16 +3,65 @@
  */
 
 import { useLocation } from '@solidjs/router';
-import { createMemo, createSignal, type JSX } from 'solid-js';
+import { createEffect, createMemo, createSignal, type JSX, Show } from 'solid-js';
 import { highlightJson, highlightYaml } from '~/lib/highlight';
 import { site, staticPages, tools } from '~/site/config';
-import { BoltTiny, Logo, ShieldTiny } from './Icons';
+import { BoltTiny, ChevronDownIcon, Logo, ShieldTiny } from './Icons';
+
+/**
+ * Nav groups: the tool suite is organised the same way the accents are —
+ * guitar (amber), measurement (violet), dev tools (blue). The group
+ * buttons are disclosure menus; a single-tool group is a plain link.
+ * Order here is the nav order; labels/paths come from the registry.
+ */
+const NAV_GROUPS: {
+  id: string;
+  label: string;
+  tone: 'guitar' | 'measure' | 'dev';
+  paths: string[];
+}[] = [
+  { id: 'guitar', label: 'Guitar tuner', tone: 'guitar', paths: ['/guitar-tuner'] },
+  { id: 'measure', label: 'Measure', tone: 'measure', paths: ['/compass', '/level', '/ruler'] },
+  {
+    id: 'dev',
+    label: 'Dev tools',
+    tone: 'dev',
+    paths: [
+      '/json-format',
+      '/json-to-yaml',
+      '/yaml-format',
+      '/jwt',
+      '/regex',
+      '/string-escape',
+      '/time',
+    ],
+  },
+];
+const groupTools = (paths: string[]) =>
+  paths
+    .map((p) => tools.find((t) => t.path === p))
+    .filter((t): t is NonNullable<typeof t> => Boolean(t));
 
 /** Page chrome: sticky header with tool nav, main container, footer. */
 export function Shell(props: { children?: JSX.Element }) {
   const location = useLocation();
   const isActive = (path: string) =>
     path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
+
+  const [openGroup, setOpenGroup] = createSignal<string | null>(null);
+  const toggleGroup = (id: string) => setOpenGroup(openGroup() === id ? null : id);
+  const closeGroups = () => setOpenGroup(null);
+
+  // Close on route change (covers in-app navigation through any link).
+  createEffect(() => {
+    void location.pathname;
+    closeGroups();
+  });
+
+  // Close on Escape.
+  const onNavKey = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') closeGroups();
+  };
 
   const [copiedId, setCopiedId] = createSignal<string | null>(null);
   const shortAddr = (a: string) => `${a.slice(0, 6)}…${a.slice(-6)}`;
@@ -34,18 +83,69 @@ export function Shell(props: { children?: JSX.Element }) {
             <Logo class="logo-mark" />
             <span>{site.name}</span>
           </a>
-          <nav class="site-nav" aria-label="Tools">
-            {tools.map((t) => (
-              <a href={t.path} aria-current={isActive(t.path) ? 'page' : undefined}>
-                {t.label}
-              </a>
-            ))}
+          <nav class="site-nav" aria-label="Tools" onKeyDown={onNavKey}>
+            {NAV_GROUPS.map((g) => {
+              const items = groupTools(g.paths);
+              if (items.length <= 1) {
+                const t = items[0]!;
+                return (
+                  <a
+                    class={`nav-link tone-${g.tone}`}
+                    href={t.path}
+                    aria-current={isActive(t.path) ? 'page' : undefined}
+                  >
+                    <i class="dot" />
+                    {g.label}
+                  </a>
+                );
+              }
+              const groupActive = g.paths.some(isActive);
+              return (
+                <span class={`nav-group tone-${g.tone}`}>
+                  <button
+                    type="button"
+                    class="nav-link nav-drop-btn"
+                    aria-expanded={openGroup() === g.id}
+                    aria-haspopup="true"
+                    data-active={groupActive || undefined}
+                    onClick={() => toggleGroup(g.id)}
+                  >
+                    {g.label}
+                    <ChevronDownIcon class="chev" />
+                  </button>
+                  <Show when={openGroup() === g.id}>
+                    <ul class="nav-drop">
+                      {items.map((t) => (
+                        <li>
+                          <a
+                            href={t.path}
+                            aria-current={isActive(t.path) ? 'page' : undefined}
+                            onClick={closeGroups}
+                          >
+                            <i class="dot" />
+                            {t.label}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </Show>
+                </span>
+              );
+            })}
             {staticPages.map((p) => (
               <a href={p.path} aria-current={isActive(p.path) ? 'page' : undefined}>
                 {p.label}
               </a>
             ))}
           </nav>
+          <Show when={openGroup() !== null}>
+            <button
+              type="button"
+              class="nav-backdrop"
+              aria-label="Close menu"
+              onClick={closeGroups}
+            />
+          </Show>
         </div>
       </header>
 
@@ -104,10 +204,12 @@ export function ToolPage(props: {
   title: string;
   lede: string;
   related?: { path: string; label: string }[];
+  /** Tool-group accent hue (scoped accent override — see components.css). */
+  tone?: 'guitar' | 'measure' | 'dev';
   children: JSX.Element;
 }) {
   return (
-    <div class="tool-page">
+    <div class={`tool-page ${props.tone ? `tone-${props.tone}` : ''}`}>
       <div class="tool-intro">
         <h1>{props.title}</h1>
         <p class="lede">{props.lede}</p>

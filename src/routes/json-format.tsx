@@ -84,6 +84,7 @@ export default function JsonFormatPage() {
     <>
       <RouteMeta path="/json-format" />
       <ToolPage
+        tone="dev"
         title="JSON format & minify"
         lede="Pretty-print, minify, sort keys and validate JSON. Errors point at the exact line and column. Your JSON never leaves the page."
         related={[

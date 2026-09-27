@@ -260,3 +260,8 @@ export function MicIcon(props: IconProps) {
     />
   );
 }
+
+/** Small chevron (nav group disclosure). */
+export function ChevronDownIcon(props: IconProps) {
+  return <Svg {...props} children='<path d="m6 9 6 6 6-6" />' />;
+}

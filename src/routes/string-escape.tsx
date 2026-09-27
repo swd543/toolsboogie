@@ -69,6 +69,7 @@ export default function StringEscapePage() {
     <>
       <RouteMeta path="/string-escape" />
       <ToolPage
+        tone="dev"
         title="String escape & unescape"
         lede="Turn raw text into a safe form for JSON, JavaScript, C, HTML, shell, URLs and more — or read an escaped string back to plain text. Instant, local, nothing uploaded."
         related={[

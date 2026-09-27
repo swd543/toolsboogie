@@ -153,6 +153,7 @@ export default function JwtPage() {
     <>
       <RouteMeta path="/jwt" />
       <ToolPage
+        tone="dev"
         title="JWT decode, sign & verify"
         lede="Decode a token, inspect header, payload and time claims, then sign or verify with HS256/384/512, RS256/384/512 or ES256/384/512 — via WebCrypto, entirely on your device. Secrets and keys never leave the page."
         related={[

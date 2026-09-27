@@ -87,6 +87,7 @@ export default function RegexPage() {
     <>
       <RouteMeta path="/regex" />
       <ToolPage
+        tone="dev"
         title="Regex checker & builder"
         lede="Type a pattern, watch it match live, and get flagged when a construct won't survive your target engine — JavaScript, Python, Go, Java, PCRE, POSIX ERE, .NET or Rust. Live matching uses the browser's ECMAScript engine; the lint is a static feature check per flavor."
         related={[

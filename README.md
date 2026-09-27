@@ -34,9 +34,11 @@ upload to. No account, no analytics, no cookies.
 - **Compass** — device orientation / WebGeolocation heading with a
   WebGPU-rendered dial (Canvas2D fallback), 16-wind labels and a
   calibration offset.
-- **Measuring stick (ruler)** — a pixel-perfect on-screen ruler. Calibrate
-  with your screen's physical width (or PPI) and it becomes a real
-  millimeter/centimeter/inch ruler for UI design and screen measurements.
+- **Measuring stick (ruler)** — a literal dual-edge on-screen ruler:
+  metric (cm) on the left edge, imperial (inches) on the right. It
+  calibrates itself from your screen's pixel density (96 × DPR estimate,
+  flagged as such) or takes your display's real size / PPI for exactness,
+  and measures any distance by click-drag.
 - **Level** — a bubble level built on device tilt, with a WebGPU-rendered
   bubble (Canvas2D fallback), degree readout and a "level" indicator.
 
