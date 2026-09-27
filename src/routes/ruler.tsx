@@ -28,11 +28,11 @@ import {
 } from '~/features/ruler/logic';
 import { copyText } from '~/lib/clipboard';
 
-/** Canvas height (CSS px): baseline + ticks + two label rows (cm, in). */
-const RULER_H = 66;
+/** Canvas height (CSS px): baseline + ticks + one label row. */
+const RULER_H = 56;
 const TOP = 8;
-const ROW_CM = TOP + 26; // metric label row
-const ROW_IN = TOP + 39; // imperial label row
+const LABEL_Y = TOP + 25;
+const DIVIDER_H = 16;
 
 function inferNow(): Calibration | null {
   try {
@@ -118,11 +118,15 @@ export default function RulerPage() {
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.clearRect(0, 0, w, RULER_H);
 
-    const { metric, imperial } = generateTicks(w, cc);
+    // Left/right split: the left half is metric (zero at the LEFT edge,
+    // increasing rightward), the right half is imperial (zero at the RIGHT
+    // edge, increasing leftward). The two scales meet at a center divider —
+    // a dual-zero tape, so an object can be measured against either edge.
+    const Z = w / 2;
+    const mTicks = generateTicks(Z, cc).metric; // x from the left edge
+    const iTicks = generateTicks(w - Z, cc).imperial; // x from the right edge
 
-    // Ticks: metric and imperial share the zero point; each edge reads its
-    // own labels (metric bottom-left, imperial bottom-right).
-    for (const t of [...metric, ...imperial]) {
+    for (const t of mTicks) {
       const len = t.kind === 'major' ? 16 : t.kind === 'medium' ? 11 : 7;
       g.beginPath();
       g.moveTo(t.x, TOP);
@@ -131,29 +135,54 @@ export default function RulerPage() {
       g.strokeStyle = 'var(--ink-muted)';
       g.stroke();
     }
+    for (const t of iTicks) {
+      const len = t.kind === 'major' ? 16 : t.kind === 'medium' ? 11 : 7;
+      g.beginPath();
+      g.moveTo(w - t.x, TOP);
+      g.lineTo(w - t.x, TOP + len);
+      g.lineWidth = t.kind === 'major' ? 1.5 : 1;
+      g.strokeStyle = 'var(--ink-muted)';
+      g.stroke();
+    }
+
     g.font = '10px ui-monospace, monospace';
-    // Metric labels (left-aligned at their tick, cm). Row 1.
-    for (const t of metric) {
-      if (t.label === undefined) continue;
-      g.fillStyle = 'var(--ink-faint)';
-      g.textAlign = 'left';
-      const mx = t.x < 2 ? 16 : t.x; // first label after the unit hint
-      g.fillText(t.label, Math.min(mx, w - 14), ROW_CM);
-    }
-    // Imperial labels (right-aligned at their tick, inches). Row 2.
-    for (const t of imperial) {
-      if (t.label === undefined) continue;
-      g.fillStyle = 'var(--ink-faint)';
-      g.textAlign = 'right';
-      const ix = t.x < 2 ? 26 : t.x; // first label after the unit hint
-      g.fillText(t.label, Math.min(ix, w - 2), ROW_IN);
-    }
-    // Edge unit hints (left margin of each row).
-    g.font = '9px ui-sans-serif, sans-serif';
     g.fillStyle = 'var(--ink-faint)';
+    // Metric labels (left half).
+    for (const t of mTicks) {
+      if (t.label === undefined) continue;
+      if (t.x < 2) {
+        g.textAlign = 'left';
+        g.fillText(t.label, 16, LABEL_Y); // after the 'cm' hint
+      } else {
+        g.textAlign = 'center';
+        g.fillText(t.label, Math.min(t.x, Z - 10), LABEL_Y);
+      }
+    }
+    // Imperial labels (right half, mirrored).
+    for (const t of iTicks) {
+      if (t.label === undefined) continue;
+      if (t.x < 2) {
+        g.textAlign = 'right';
+        g.fillText(t.label, w - 16, LABEL_Y); // before the 'in' hint
+      } else {
+        g.textAlign = 'center';
+        g.fillText(t.label, Math.max(w - t.x, Z + 10), LABEL_Y);
+      }
+    }
+    // Unit hints at each outer edge.
+    g.font = '9px ui-sans-serif, sans-serif';
     g.textAlign = 'left';
-    g.fillText('cm', 2, ROW_CM);
-    g.fillText('in', 2, ROW_IN);
+    g.fillText('cm', 2, LABEL_Y);
+    g.textAlign = 'right';
+    g.fillText('in', w - 2, LABEL_Y);
+
+    // Center divider between the two scales.
+    g.beginPath();
+    g.moveTo(Z, TOP);
+    g.lineTo(Z, TOP + DIVIDER_H);
+    g.lineWidth = 1.5;
+    g.strokeStyle = 'var(--line-strong)';
+    g.stroke();
 
     // Baseline
     g.beginPath();
@@ -277,7 +306,7 @@ export default function RulerPage() {
       <ToolPage
         tone="measure"
         title="On-screen ruler"
-        lede="A literal ruler for your screen: metric on the left edge, imperial on the right. It calibrates itself from your screen's pixel density (96 × devicePixelRatio — an estimate, flagged as such); enter your display's real size for exactness. Click-drag to measure between two points."
+        lede="A literal ruler for your screen: metric on the left half, imperial on the right — each zero at its outer edge, so you can measure against either side. It calibrates itself from your screen's pixel density (96 × devicePixelRatio — an estimate, flagged as such); enter your display's real size for exactness. Click-drag to measure between two points."
         related={[
           { path: '/level', label: 'Level' },
           { path: '/compass', label: 'Compass' },
@@ -289,7 +318,7 @@ export default function RulerPage() {
           onPointerMove={onMove}
           onPointerDown={onDown}
           role="img"
-          aria-label="On-screen ruler: metric centimetres on the left edge, imperial inches on the right edge"
+          aria-label="On-screen ruler: metric centimetres on the left half (zero at the left edge), imperial inches on the right half (zero at the right edge)"
         >
           <canvas ref={(el) => (canvas = el)} class="ruler-canvas" style={`height: ${RULER_H}px`} />
         </div>
