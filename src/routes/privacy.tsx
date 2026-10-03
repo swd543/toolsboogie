@@ -65,7 +65,7 @@ export default function PrivacyPage() {
         <h2>Contact</h2>
         <p>
           Questions or concerns about this privacy policy? Email{' '}
-          <a href="mailto:{site.contactEmail}">{site.contactEmail}</a>.
+          <a href={`mailto:${site.contactEmail}`}>{site.contactEmail}</a>.
         </p>
 
         <p class="prose-foot">Last updated: September 2026 · {siteUrl}</p>
