@@ -9,7 +9,9 @@ upload to. No account, no analytics, no cookies.
 
 ## Tools
 
-- **Guitar tuner** - microphone pitch detection (YIN, in a Rust/WASM core)
+- **Guitar tuner** - microphone pitch detection (YIN, in a Rust/WASM core),
+  standard/Drop D/open/reentrant tunings, custom string-by-string tuning and
+  sharp/flat note notation
   with a cent-accurate needle, note history, and the six standard strings as
   one-tap targets. Web Audio API + AudioWorklet; SIMD in the FFT.
 - **JSON formatter** - pretty-print / minify with key sorting and syntax

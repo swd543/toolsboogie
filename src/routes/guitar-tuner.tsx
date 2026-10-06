@@ -6,17 +6,28 @@
  * through a zero-gain node, so nothing is played back. Audio never leaves
  * the device — it is analyzed in-page and discarded.
  */
-import { createMemo, createSignal, For, onCleanup, Show } from 'solid-js';
+import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js';
 import { AdSlot } from '~/components/AdSlot';
 import { AlertIcon, MicIcon } from '~/components/Icons';
 import { RouteMeta } from '~/components/RouteMeta';
 import { ToolColumns, ToolPage } from '~/components/Shell';
 import {
+  CUSTOM_MIDI_MAX,
+  CUSTOM_MIDI_MIN,
+  CUSTOM_TUNING_ID,
   centsLabel,
   isTuned,
+  loadTunerPrefs,
+  type Notation,
   needleRotation,
+  noteName,
   STANDARD_TUNING,
+  STRING_ORDINALS,
+  saveTunerPrefs,
+  stringsFor,
+  TUNING_PRESETS,
   type TunerState,
+  tuningMidis,
   workletUrl,
 } from '~/features/tuner/logic';
 import { toolcoreAvailable, wasmPitchDetect } from '~/lib/wasm';
@@ -26,9 +37,45 @@ export default function GuitarTunerPage() {
   const [live, setLive] = createSignal(false);
   const [starting, setStarting] = createSignal(false);
   const [error, setError] = createSignal('');
-  const [targetMidi, setTargetMidi] = createSignal(64); // E4 (high E)
+  const [tuningId, setTuningId] = createSignal('standard');
+  const [customMidis, setCustomMidis] = createSignal<number[]>(STANDARD_TUNING.map((s) => s.midi));
+  const [notation, setNotation] = createSignal<Notation>('sharp');
+  const [targetIndex, setTargetIndex] = createSignal(5); // high E in standard
   const [state, setState] = createSignal<TunerState | null>(null);
   const [spectrum, setSpectrum] = createSignal<number[]>([]);
+
+  const midis = createMemo(() => tuningMidis(tuningId(), customMidis()));
+  const strings = createMemo(() => stringsFor(midis(), notation()));
+  const targetMidi = createMemo(() => midis()[targetIndex()] ?? STANDARD_TUNING[5]!.midi);
+  const customOptions = createMemo(() => {
+    const out: number[] = [];
+    for (let m = CUSTOM_MIDI_MIN; m <= CUSTOM_MIDI_MAX; m++) out.push(m);
+    return out;
+  });
+
+  const persistPrefs = () =>
+    saveTunerPrefs({ tuningId: tuningId(), customMidis: customMidis(), notation: notation() });
+  const setTuningPersist = (id: string) => {
+    setTuningId(id);
+    persistPrefs();
+  };
+  const setNotationPersist = (n: Notation) => {
+    setNotation(n);
+    persistPrefs();
+  };
+  const setCustomMidi = (i: number, m: number) => {
+    setCustomMidis((prev) => prev.map((v, j) => (j === i ? m : v)));
+    persistPrefs();
+  };
+
+  onMount(() => {
+    const p = loadTunerPrefs();
+    if (p) {
+      setTuningId(p.tuningId);
+      setCustomMidis(p.customMidis);
+      setNotation(p.notation);
+    }
+  });
 
   let ctx: AudioContext | null = null;
   let node: AudioWorkletNode | null = null;
@@ -46,7 +93,7 @@ export default function GuitarTunerPage() {
   });
   const noteText = createMemo(() => {
     const s = state();
-    return s ? (s.midi >= 0 ? s.note : '—') : '·';
+    return s ? (s.midi >= 0 ? noteName(s.midi, notation()) : '—') : '·';
   });
   const centsText = createMemo(() => {
     const s = state();
@@ -60,9 +107,9 @@ export default function GuitarTunerPage() {
     const s = state();
     return `${needleRotation(s?.cents ?? 0, s !== null && s.midi >= 0).toFixed(1)}deg`;
   });
-  const stringTuned = (midi: number): boolean => {
+  const stringTuned = (i: number): boolean => {
     const s = state();
-    return s !== null && isTuned(s, midi);
+    return s !== null && isTuned(s, midis()[i] ?? -1);
   };
 
   const stop = async () => {
@@ -158,7 +205,7 @@ export default function GuitarTunerPage() {
       <ToolPage
         tone="guitar"
         title="Guitar tuner"
-        lede="Tap a string and watch the gauge. A YIN pitch detector runs on 8192-sample frames from your microphone - note, cents and frequency update live, and the spectrum shows what it hears. Nothing is recorded or sent anywhere."
+        lede="Tap a string and watch the gauge. A YIN pitch detector runs on 8192-sample frames from your microphone - note, cents and frequency update live, and the spectrum shows what it hears. Standard, Drop D, open and reentrant tunings, or build a custom one, with sharp or flat note spelling. Nothing is recorded or sent anywhere."
         related={[
           { path: '/compass', label: 'Compass' },
           { path: '/level', label: 'Level' },
@@ -223,6 +270,59 @@ export default function GuitarTunerPage() {
           </div>
 
           <aside class="tool-aside" style="margin: 0">
+            <div class="opt-group">
+              <span class="opt-label">Tuning</span>
+              <select
+                aria-label="Tuning"
+                value={tuningId()}
+                onChange={(e) => setTuningPersist(e.currentTarget.value)}
+              >
+                <For each={TUNING_PRESETS}>{(p) => <option value={p.id}>{p.name}</option>}</For>
+                <option value={CUSTOM_TUNING_ID}>Custom (pick each string)</option>
+              </select>
+              <Show when={tuningId() === CUSTOM_TUNING_ID}>
+                <div class="tuner-custom">
+                  <For each={strings()}>
+                    {(s, i) => (
+                      <label class="tuner-custom-row">
+                        <span class="opt-hint">{STRING_ORDINALS[i()]}</span>
+                        <select
+                          aria-label={`${STRING_ORDINALS[i()]} string note`}
+                          value={customMidis()[i()] ?? s.midi}
+                          onChange={(e) => setCustomMidi(i(), Number(e.currentTarget.value))}
+                        >
+                          <For each={customOptions()}>
+                            {(m) => <option value={m}>{noteName(m, notation())}</option>}
+                          </For>
+                        </select>
+                      </label>
+                    )}
+                  </For>
+                </div>
+              </Show>
+              <div class="tuner-notation">
+                <button
+                  type="button"
+                  class={`chip ${notation() === 'sharp' ? 'is-on' : ''}`}
+                  aria-pressed={notation() === 'sharp'}
+                  onClick={() => setNotationPersist('sharp')}
+                >
+                  Sharps (F#)
+                </button>
+                <button
+                  type="button"
+                  class={`chip ${notation() === 'flat' ? 'is-on' : ''}`}
+                  aria-pressed={notation() === 'flat'}
+                  onClick={() => setNotationPersist('flat')}
+                >
+                  Flats (Gb)
+                </button>
+              </div>
+              <p class="opt-hint">
+                Sharps spell accidentals as C#/F#; flats as Db/Gb. The choice is display-only - the
+                pitch math is identical.
+              </p>
+            </div>
             <button
               type="button"
               class="btn btn-primary btn-block"
@@ -263,13 +363,13 @@ export default function GuitarTunerPage() {
         </div>
 
         <div class="tuner-string-row">
-          <For each={STANDARD_TUNING}>
-            {(s) => (
+          <For each={strings()}>
+            {(s, i) => (
               <button
                 type="button"
-                class={`tuner-string ${targetMidi() === s.midi ? 'active' : ''}`}
-                data-tuned={stringTuned(s.midi) ? 'true' : 'false'}
-                onClick={() => setTargetMidi(s.midi)}
+                class={`tuner-string ${targetIndex() === i() ? 'active' : ''}`}
+                data-tuned={stringTuned(i()) ? 'true' : 'false'}
+                onClick={() => setTargetIndex(i())}
               >
                 {s.label}
               </button>
@@ -284,6 +384,11 @@ export default function GuitarTunerPage() {
               <p class="opt-hint">
                 Tap the string, let it ring, and watch the needle: left = flat (↓), right = sharp
                 (↑). Green means within ±5¢ of the selected string.
+              </p>
+              <p class="opt-hint">
+                Pick a tuning from the side panel: Drop D, open G/D/E, DADGAD, half-step down - or
+                Custom to choose each of the six strings yourself. The selection and note spelling
+                (sharps/flats) are remembered on this device.
               </p>
               <p class="opt-hint">
                 Low E (82 Hz) needs a clear ring - a quiet room helps. If the note reads an octave

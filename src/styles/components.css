@@ -1097,6 +1097,39 @@ input[type="range"] {
   color: var(--ok);
 }
 
+.tuner-notation {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+.tuner-notation .chip {
+  flex: 1;
+  text-align: center;
+}
+
+.tuner-custom {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+.tuner-custom-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.tuner-custom-row select {
+  width: 100%;
+  min-width: 0;
+  font-size: 0.8rem;
+  padding-top: 0.3rem;
+  padding-bottom: 0.3rem;
+}
+
 .spectrum {
   width: 100%;
   height: 64px;
@@ -1538,6 +1571,7 @@ input[type="range"] {
   margin-top: 0.5rem;
 }
 
+/* biome-ignore lint/style/noDescendingSpecificity: scoped .tuner-notation .chip override sits earlier in the file */
 .chip {
   border: 1px solid var(--line-strong);
   background: var(--bg);

@@ -36,8 +36,8 @@ export const routeMeta: Record<string, RouteMeta> = {
   '/guitar-tuner': {
     title: 'Guitar Tuner Online - Free, Private, In-Browser (No Upload) | ToolsBoogie',
     description:
-      'Tune your guitar right in the browser. A live pitch detector listens to your strings through the ' +
-      'microphone and shows note, cents deviation and a spectrum - all on your device, nothing is recorded.',
+      'Tune right in the browser: standard, Drop D, open and reentrant tunings, or a custom one, with ' +
+      'sharp or flat note spelling. Live YIN pitch detection, on your device, nothing recorded.',
     image: ogImage,
   },
   '/json-format': {
