@@ -51,8 +51,9 @@ upload to. No account, no analytics, no cookies.
   right, each zero at the top. Calibrates itself from your screen's pixel
   density (96 × DPR estimate, flagged as such) or takes your display's
   real size / PPI for exactness. For objects longer than the screen:
-  press to anchor at zero, slide the phone along the object and lift -
-  the motion sensor estimates the distance slid.
+  press to anchor at zero, slide the phone along the object, stop, then
+  lift. The live ruler follows the slide; the final stop-to-stop stroke is
+  corrected for constant sensor bias before the reading is held.
 - **Level** - a bubble level built on device tilt, with a WebGPU-rendered
   bubble (Canvas2D fallback), degree readout and a "level" indicator.
 

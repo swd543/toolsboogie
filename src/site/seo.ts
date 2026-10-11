@@ -164,8 +164,8 @@ export const routeMeta: Record<string, RouteMeta> = {
     title: 'Online Ruler - Metric & Imperial On-Screen Ruler | ToolsBoogie',
     description:
       'A dual-edge on-screen ruler on the left and right edges of the screen - centimetres down the left, ' +
-      'inches down the right - plus a slide measurement from the motion sensor for objects longer than the ' +
-      'screen. Calibrates itself from your screen or takes your display size. Free, private, no upload.',
+      'inches down the right - plus a stop-to-stop slide measurement for objects longer than the screen. ' +
+      'The ruler moves live and corrects constant sensor bias on release. Free, private, no upload.',
     image: ogImage,
   },
   '/level': {

@@ -7,156 +7,211 @@ import {
   readingM,
   release,
   resetReading,
+  type SlideState,
+  slideQuality,
 } from './motion';
 
-/** Build a sample stream: gravity on -Z, plus a Y acceleration profile. */
-function stream(samples: { t: number; ay: number }[], withLinear: boolean): MotionSample[] {
-  return samples.map(({ t, ay }) =>
-    withLinear
-      ? { t, raw: { x: 0, y: ay, z: -9.81 }, linear: { x: 0, y: ay, z: 0 } }
-      : { t, raw: { x: 0, y: ay, z: -9.81 }, linear: null },
-  );
+const DT_MS = 1000 / 60;
+
+function sample(t: number, ay: number, linearAy: number | null = null): MotionSample {
+  return {
+    t,
+    raw: { x: 0, y: ay, z: -9.81 },
+    linear: linearAy === null ? null : { x: 0, y: linearAy, z: 0 },
+  };
 }
 
-describe('slide anchor/release', () => {
-  it('feeds before an anchor do nothing', () => {
+function idle(s: SlideState, t: number, count = 60, linearBias: number | null = null): number {
+  for (let i = 0; i < count; i += 1) {
+    feed(s, sample(t, 0, linearBias));
+    t += DT_MS;
+  }
+  return t;
+}
+
+function begin(s: SlideState, t: number, linearBias: number | null = null): number {
+  anchor(s);
+  feed(s, sample(t, 0, linearBias));
+  return t + DT_MS;
+}
+
+function push(
+  s: SlideState,
+  t: number,
+  count: number,
+  ay: number,
+  bias = 0,
+  linear = false,
+): number {
+  for (let i = 0; i < count; i += 1) {
+    const measured = ay + bias;
+    feed(s, sample(t, measured, linear ? measured : null));
+    t += DT_MS;
+  }
+  return t;
+}
+
+function trapezoid(s: SlideState, t: number, bias = 0, linear = false): number {
+  t = push(s, t, 15, 2, bias, linear); // accelerate for ~0.25 s
+  t = push(s, t, 60, 0, bias, linear); // cruise for ~1.0 s
+  t = push(s, t, 15, -2, bias, linear); // decelerate to rest
+  return push(s, t, 8, 0, bias, linear); // brief stopped hold before lift
+}
+
+describe('stop-to-stop gesture', () => {
+  it('does nothing before an anchor', () => {
     const s = initSlide();
-    for (const m of stream(
-      [0, 16, 32].map((t) => ({ t, ay: 2 })),
-      true,
-    ))
-      feed(s, m);
+    let t = 0;
+    t = idle(s, t);
+    t = push(s, t, 30, 2);
+    expect(t).toBeGreaterThan(0);
     expect(readingM(s)).toBe(0);
-    expect(s.anchored).toBe(false);
+    expect(slideQuality(s)).toBe('idle');
   });
 
-  it('anchor starts at zero; release freezes the reading', () => {
+  it('measures an accelerate-cruise-decelerate stroke', () => {
     const s = initSlide();
-    anchor(s);
-    expect(readingM(s)).toBe(0);
-    // 10 at-rest samples seed the gravity estimate, then a push at 2 m/s².
-    for (let i = 0; i < 40; i += 1) {
-      const tt = i * 16;
-      feed(s, { t: tt, raw: { x: 0, y: i < 10 ? 0 : 2, z: -9.81 }, linear: null });
-    }
+    let t = idle(s, 0);
+    t = begin(s, t);
+    t = trapezoid(s, t);
+    expect(readingM(s)).toBeGreaterThan(0.5); // live estimate moves
+    release(s);
+    expect(readingM(s)).toBeCloseTo(0.625, 1);
+    expect(slideQuality(s)).toBe('corrected');
+  });
+
+  it('holds the final reading after release', () => {
+    const s = initSlide();
+    let t = idle(s, 0);
+    t = begin(s, t);
+    t = trapezoid(s, t);
+    release(s);
     const held = readingM(s);
-    expect(held).toBeGreaterThan(0.1);
-    release(s);
-    // Further samples after release must not move the reading.
-    for (let i = 0; i < 20; i += 1)
-      feed(s, { t: 500 + i * 16, raw: { x: 0, y: 2, z: -9.81 }, linear: null });
-    expect(readingM(s)).toBeCloseTo(held, 10);
+    t = push(s, t, 60, 4);
+    expect(t).toBeGreaterThan(0);
+    expect(readingM(s)).toBeCloseTo(held, 12);
   });
 
-  it('re-anchoring resets the reading to zero', () => {
+  it('re-anchoring and Reset both clear the stroke', () => {
     const s = initSlide();
-    anchor(s);
-    for (let i = 0; i < 40; i += 1) {
-      const tt = i * 16;
-      feed(s, { t: tt, raw: { x: 0, y: i < 10 ? 0 : 2, z: -9.81 }, linear: null });
-    }
-    expect(readingM(s)).toBeGreaterThan(0.1);
+    let t = idle(s, 0);
+    t = begin(s, t);
+    t = trapezoid(s, t);
     release(s);
+    expect(readingM(s)).toBeGreaterThan(0.5);
     anchor(s);
     expect(readingM(s)).toBe(0);
-  });
-
-  it('reset zeros the reading without anchoring', () => {
-    const s = initSlide();
-    anchor(s);
-    for (let i = 0; i < 40; i += 1) {
-      const tt = i * 16;
-      feed(s, { t: tt, raw: { x: 0, y: i < 10 ? 0 : 2, z: -9.81 }, linear: null });
-    }
-    release(s);
     resetReading(s);
     expect(readingM(s)).toBe(0);
+    expect(slideQuality(s)).toBe('idle');
   });
 });
 
-describe('gravity + integration', () => {
-  it('a resting phone reads ~0 (gravity removed)', () => {
+describe('calibration and drift rejection', () => {
+  it('does not move for realistic at-rest noise', () => {
     const s = initSlide();
-    anchor(s);
-    // 2 s of stillness at 60 Hz: raw signal is gravity only.
-    const t = Array.from({ length: 120 }, (_, i) => i * 16.7);
-    for (const tt of t) feed(s, { t: tt, raw: { x: 0, y: 0, z: -9.81 }, linear: null });
-    expect(readingM(s)).toBeLessThan(0.005); // < 5 mm drift over 2 s at rest
-  });
-
-  it('a trapezoid slide reads roughly the travelled distance', () => {
-    // Ramp up 2 m/s² for 0.25 s, cruise, ramp down: peak v = 0.5 m/s,
-    // ideal distance = 0.5 * (0.25 + 1.0 + 0.25) = 0.625 m.
-    const profile: { t: number; ay: number }[] = [];
-    const dt = 16.7;
-    let t = 0;
-    const push = (n: number, ay: number) => {
-      for (let i = 0; i < n; i += 1) {
-        profile.push({ t, ay });
-        t += dt;
-      }
-    };
-    push(15, 2); // ~0.25 s
-    push(60, 0); // ~1.0 s cruise
-    push(15, -2); // ~0.25 s
-    const s = initSlide();
-    anchor(s);
-    // Seed at rest, then the profile.
-    for (const i of [0, 16.7, 33.4]) feed(s, { t: i, raw: { x: 0, y: 0, z: -9.81 }, linear: null });
-    for (const m of stream(profile, false)) feed(s, m);
+    let t = idle(s, 0);
+    t = begin(s, t);
+    for (let i = 0; i < 180; i += 1) {
+      const noise = i % 4 === 0 ? 0.045 : i % 4 === 1 ? -0.035 : i % 4 === 2 ? 0.02 : -0.025;
+      feed(s, sample(t, noise));
+      t += DT_MS;
+    }
     release(s);
-    const r = readingM(s);
-    expect(r).toBeGreaterThan(0.5);
-    expect(r).toBeLessThan(0.75);
+    expect(readingM(s)).toBeLessThan(0.001);
   });
 
-  it('uses the platform linear acceleration when provided', () => {
+  it('removes constant sensor bias at release', () => {
     const s = initSlide();
-    anchor(s);
-    const t = Array.from({ length: 40 }, (_, i) => i * 16.7);
-    // raw carries gravity only; the linear channel carries the 2 m/s² slide.
-    for (const tt of t)
-      feed(s, { t: tt, raw: { x: 0, y: 0, z: -9.81 }, linear: { x: 0, y: 2, z: 0 } });
-    // 0.67 s at 2 m/s² -> ~0.45 m (half of a*t²=0.449).
-    expect(readingM(s)).toBeGreaterThan(0.35);
-    expect(readingM(s)).toBeLessThan(0.55);
+    let t = idle(s, 0);
+    t = begin(s, t);
+    t = trapezoid(s, t, 0.25);
+    const live = readingM(s);
+    release(s);
+    const corrected = readingM(s);
+    expect(live).toBeGreaterThan(0.75); // biased causal integration drifts high
+    expect(corrected).toBeCloseTo(0.625, 1);
+    expect(corrected).toBeLessThan(live);
   });
 
-  it('a slow steady slide is fully measured (not absorbed into gravity)', () => {
-    // 0.5 m/s^2 is BELOW the rest threshold: before the anchor freeze it
-    // was re-classified as gravity and the reading went to zero.
+  it('uses and calibrates platform linear acceleration when available', () => {
     const s = initSlide();
+    const linearBias = 0.18;
+    let t = idle(s, 0, 60, linearBias);
+    t = begin(s, t, linearBias);
+    t = trapezoid(s, t, linearBias, true);
+    release(s);
+    expect(s.source).toBe('linear');
+    expect(readingM(s)).toBeCloseTo(0.625, 1);
+  });
+
+  it('can arm from linear-only samples after the press', () => {
+    const s = initSlide();
+    const bias = 0.12;
     let t = 0;
-    for (let i = 0; i < 60; i += 1) {
-      feed(s, { t, raw: { x: 0, y: 0, z: -9.81 }, linear: null });
-      t += 16.7;
-    }
     anchor(s);
-    for (let i = 0; i < 30; i += 1) {
-      feed(s, { t, raw: { x: 0, y: 0.5, z: -9.81 }, linear: null });
-      t += 16.7;
+    for (let i = 0; i < 4; i += 1) {
+      feed(s, { t, raw: null, linear: { x: 0, y: bias, z: 0 } });
+      t += DT_MS;
     }
-    const got = readingM(s);
-    const ideal = 0.5 * 0.5 * 0.25; // 0.5 m/s^2 x 0.5 s
-    expect(got).toBeGreaterThan(0.045);
-    expect(got).toBeLessThan(ideal * 1.15);
+    const phases: Array<[number, number]> = [
+      [15, 2],
+      [60, 0],
+      [15, -2],
+      [8, 0],
+    ];
+    for (const [count, ay] of phases) {
+      for (let i = 0; i < count; i += 1) {
+        feed(s, { t, raw: null, linear: { x: 0, y: ay + bias, z: 0 } });
+        t += DT_MS;
+      }
+    }
+    release(s);
+    expect(s.source).toBe('linear');
+    expect(readingM(s)).toBeCloseTo(0.625, 1);
   });
 
-  it('clamps huge sample gaps instead of integrating them', () => {
+  it('measures a gentle acceleration below the old gravity threshold', () => {
     const s = initSlide();
-    anchor(s);
-    feed(s, { t: 0, raw: { x: 0, y: 2, z: -9.81 }, linear: null });
-    feed(s, { t: 1000, raw: { x: 0, y: 2, z: -9.81 }, linear: null }); // 1 s gap
-    feed(s, { t: 1016, raw: { x: 0, y: 2, z: -9.81 }, linear: null });
-    // A 1 s gap must integrate at most DT_MAX (0.05 s) of acceleration.
-    expect(readingM(s)).toBeLessThan(0.05 * 2);
+    let t = idle(s, 0);
+    t = begin(s, t);
+    t = push(s, t, 30, 0.5);
+    t = push(s, t, 30, -0.5);
+    t = push(s, t, 6, 0);
+    release(s);
+    // Two 0.5 s phases form a triangle velocity profile: ~0.125 m.
+    expect(readingM(s)).toBeGreaterThan(0.1);
+    expect(readingM(s)).toBeLessThan(0.15);
   });
 
-  it('ignores null/NaN samples', () => {
+  it('skips a large sensor gap rather than integrating it', () => {
+    const s = initSlide();
+    let t = idle(s, 0);
+    t = begin(s, t);
+    t = push(s, t, 8, 2);
+    t += 1000;
+    feed(s, sample(t, 2));
+    const before = readingM(s);
+    feed(s, sample(t + DT_MS, 2));
+    expect(readingM(s) - before).toBeLessThan(0.02);
+    expect(slideQuality(s)).toBe('uncertain');
+  });
+
+  it('marks an acceleration-only release as uncertain', () => {
+    const s = initSlide();
+    let t = idle(s, 0);
+    t = begin(s, t);
+    t = push(s, t, 30, 1);
+    expect(readingM(s)).toBeGreaterThan(0.1);
+    release(s);
+    expect(slideQuality(s)).toBe('uncertain');
+  });
+
+  it('ignores null and non-finite samples', () => {
     const s = initSlide();
     anchor(s);
     feed(s, { t: 0, raw: null, linear: null });
-    feed(s, { t: 16, raw: { x: NaN, y: 2, z: -9.81 }, linear: null });
+    feed(s, { t: 16, raw: { x: 0, y: Number.NaN, z: -9.81 }, linear: null });
     expect(readingM(s)).toBe(0);
   });
 });

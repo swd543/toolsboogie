@@ -12,10 +12,10 @@
  * calibration persists in localStorage; inferred values do not.
  *
  * Slide measurement (motion sensor): press the screen to anchor at zero,
- * slide the phone physically along the object and lift - the
- * `devicemotion` acceleration along the device's vertical axis is
- * integrated to estimate the distance slid (features/ruler/motion.ts).
- * An approximation by nature; re-pressing resets to zero.
+ * slide the phone physically along the object, stop, then lift. Live motion
+ * is integrated along the device's vertical axis; at release the complete
+ * stop-to-stop stroke is bias-corrected and re-integrated
+ * (features/ruler/motion.ts). Re-pressing resets to zero.
  */
 import { createEffect, createMemo, createSignal, onCleanup, onMount, Show } from 'solid-js';
 import { AdSlot } from '~/components/AdSlot';
@@ -42,7 +42,9 @@ import {
   readingM,
   release,
   resetReading,
+  type SlideQuality,
   type SlideState,
+  slideQuality,
 } from '~/features/ruler/motion';
 import { copyText } from '~/lib/clipboard';
 import { requestSensorPermission } from '~/lib/orientation';
@@ -90,6 +92,7 @@ export default function RulerPage() {
   let lastUiT = 0;
   let lastDrawT = 0;
   const [reading, setReading] = createSignal(0); // metres
+  const [quality, setQuality] = createSignal<SlideQuality>('idle');
   const [anchored, setAnchored] = createSignal(false);
   const [sensed, setSensed] = createSignal(false);
   const [anchorPt, setAnchorPt] = createSignal<{ x: number; y: number } | null>(null);
@@ -320,6 +323,7 @@ export default function RulerPage() {
     setAnchored(true);
     setSensed(false);
     setReading(0);
+    setQuality('live');
     setAnchorPt(downPt);
     // iOS 13+ needs the permission request inside the user gesture.
     void requestSensorPermission();
@@ -334,7 +338,9 @@ export default function RulerPage() {
     if (d > SCROLL_CANCEL_PX) {
       anchorCancelled = true;
       slide.anchored = false;
+      resetReading(slide);
       setAnchored(false);
+      setQuality('idle');
       setAnchorPt(null);
       scheduleDraw();
     }
@@ -349,12 +355,14 @@ export default function RulerPage() {
     release(slide);
     setAnchored(false);
     setReading(readingM(slide));
+    setQuality(slideQuality(slide));
     scheduleDraw();
   };
 
   const resetAll = () => {
     resetReading(slide);
     setReading(0);
+    setQuality('idle');
     if (!anchored()) setAnchorPt(null);
     scheduleDraw();
   };
@@ -385,8 +393,11 @@ export default function RulerPage() {
       if (!sensed()) return 'Anchored - now slide the phone along the object';
       return readingText() || formatUnit(0, unit());
     }
+    if (quality() === 'uncertain') {
+      return `${readingText() || formatUnit(0, unit())} approx - stop the phone before lifting`;
+    }
     if (reading() >= 0.0005) return readingText();
-    return 'Press the screen to anchor at zero, then slide the phone along the object';
+    return 'Press to anchor, slide the phone, stop, then lift';
   });
 
   /** The ruler axis length: the viewport height. */
@@ -473,7 +484,7 @@ export default function RulerPage() {
       <div
         class="ruler-screen"
         role="img"
-        aria-label="On-screen ruler: metric centimetres down the left edge and imperial inches down the right edge, both zero at the top. Press the screen and slide the phone along the object to measure longer distances."
+        aria-label="On-screen ruler: metric centimetres down the left edge and imperial inches down the right edge, both zero at the top. Press to anchor, slide the phone along the object, stop, then lift to measure longer distances."
       >
         <canvas ref={(el) => (canvas = el)} class="ruler-canvas" />
       </div>
@@ -495,7 +506,7 @@ export default function RulerPage() {
         <ToolPage
           tone="measure"
           title="On-screen ruler"
-          lede="A literal ruler on the edges of your screen: metric down the left edge, imperial down the right, each zero at the top. Objects that fit the screen read straight off the scale. For anything longer, press the screen to anchor at zero, then slide the phone along the object - the ruler travels along with your slide (like tape), driven by the motion sensor (an approximation; steady slides read best). Lift to read, press again to reset to zero. The on-screen scale calibrates itself from your screen's pixel density (96 x devicePixelRatio - an estimate, flagged as such); enter your display's real size for exactness."
+          lede="A literal ruler on the edges of your screen: metric down the left edge, imperial down the right, each zero at the top. Objects that fit the screen read straight off the scale. For anything longer, press the screen to anchor at zero, slide the phone along the object, stop, then lift. The ruler travels along with your slide like tape. On release, the full stop-to-stop stroke is corrected for constant sensor bias before the reading is held. This remains an approximation: keep the phone in one orientation and use short, smooth strokes. Press again to reset to zero. The on-screen scale calibrates itself from your screen's pixel density (96 x devicePixelRatio - an estimate, flagged as such); enter your display's real size for exactness."
           related={[
             { path: '/level', label: 'Level' },
             { path: '/compass', label: 'Compass' },
@@ -509,9 +520,9 @@ export default function RulerPage() {
                   <p class="opt-hint">
                     For objects longer than the screen: hold the phone flat in portrait, press the
                     screen to anchor at zero, then slide the phone along the object. The ruler
-                    scrolls along with your slide (opposite to it, like tape on the object), driven
-                    by the motion sensor - an approximation, best with a steady slide. Lift to read;
-                    pressing again resets to zero.
+                    scrolls along with your slide (opposite to it, like tape on the object). Stop
+                    the phone, then lift. The final stop-to-stop stroke is corrected for constant
+                    sensor bias. Keep the phone in one orientation; pressing again resets to zero.
                   </p>
                   <p class="opt-hint">
                     The slide reading needs a motion sensor (phones and tablets); on a desktop it
