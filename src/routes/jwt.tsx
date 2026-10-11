@@ -34,7 +34,8 @@ const SAMPLE_TOKEN =
 const pretty = (o: unknown) => JSON.stringify(o, null, 2);
 
 export default function JwtPage() {
-  const [token, setToken] = createSignal('');
+  // Prefilled with the sample token so decoding works on first load.
+  const [token, setToken] = createSignal(SAMPLE_TOKEN);
   const [tab, setTab] = createSignal<'inspect' | 'signverify'>('inspect');
 
   // ----- decode & inspect -----

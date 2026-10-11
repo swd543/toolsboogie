@@ -215,6 +215,11 @@ export default function RegexPage() {
                 class="code-edit"
                 rows={4}
                 value={text()}
+                ref={(el) => {
+                  // The HTML parser ignores a `value` attribute on <textarea>;
+                  // sync the DOM property so the SSR prefill survives hydration.
+                  el.value = text();
+                }}
                 spellcheck={false}
                 aria-label="Text to match against"
                 onInput={(e) => setText(e.currentTarget.value)}

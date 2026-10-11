@@ -26,7 +26,9 @@ interface OutRow {
 }
 
 export default function TimePage() {
-  const [input, setInput] = createSignal('');
+  // Prefilled with a fixed, real timestamp so the page works on first load
+  // (deterministic: prerender-safe, no clock reads).
+  const [input, setInput] = createSignal('2026-10-11T12:00:00Z');
   const [format, setFormat] = createSignal<InputFormat>('auto');
   const [tz, setTz] = createSignal('UTC');
   const [copied, setCopied] = createSignal<string | null>(null);
@@ -174,6 +176,11 @@ export default function TimePage() {
                 class="code-edit"
                 rows={3}
                 value={input()}
+                ref={(el) => {
+                  // The HTML parser ignores a `value` attribute on <textarea>;
+                  // sync the DOM property so the SSR prefill survives hydration.
+                  el.value = input();
+                }}
                 spellcheck={false}
                 placeholder="2026-09-27T12:30:00Z · 1790000000 · 2026-09-27 12:30:00 · Mon, 27 Sep 2026 12:30:00 GMT …"
                 aria-label="Timestamp input"

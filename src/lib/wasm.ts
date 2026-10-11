@@ -35,6 +35,8 @@ interface ToolcoreModule {
   yamlFormat(input: string): string;
   yamlToJson(input: string): string;
   jsonToYaml(input: string): string;
+  dataConvert(input: string, from: string, to: string, optionsJson: string): string;
+  detectFormat(input: string): string;
   pitchDetect(samples: Float32Array, sampleRate: number): PitchResultHandle;
   default?: (input?: unknown) => Promise<void>;
 }
@@ -112,6 +114,44 @@ export async function wasmYamlToJson(input: string): Promise<string> {
 export async function wasmJsonToYaml(input: string): Promise<string> {
   const mod = await loadModule();
   return mod.jsonToYaml(input);
+}
+
+/* ---------------- Data conversion (JSON / YAML / TOML / INI / XML) ------ */
+
+/** The five supported data formats (must match `toolcore::FORMATS`). */
+export type DataFormat = 'json' | 'yaml' | 'toml' | 'ini' | 'xml';
+
+/** How nulls are handled when rendering to a format without null. */
+export type NullPolicy = 'fail' | 'skip' | 'emptyString';
+
+export interface DataConvertOptions {
+  /** JSON output indentation in spaces (0 = minified). */
+  indent?: number;
+  /** Sort object keys at every level before rendering. */
+  sortKeys?: boolean;
+  /** YAML output: deduplicate repeated blocks with anchors/merge keys. */
+  anchors?: boolean;
+  /** null policy for TOML/INI/XML output (default: fail). */
+  nullPolicy?: NullPolicy;
+}
+
+export function wasmDataConvert(
+  input: string,
+  from: DataFormat,
+  to: DataFormat,
+  options: DataConvertOptions = {},
+): Promise<string> {
+  const opts: Record<string, unknown> = {};
+  if (options.indent !== undefined) opts.indent = options.indent;
+  if (options.sortKeys !== undefined) opts.sortKeys = options.sortKeys;
+  if (options.anchors !== undefined) opts.anchors = options.anchors;
+  if (options.nullPolicy !== undefined) opts.nullPolicy = options.nullPolicy;
+  return loadModule().then((mod) => mod.dataConvert(input, from, to, JSON.stringify(opts)));
+}
+
+/** Auto-detect the format of `input` (json/yaml/toml/ini/xml), '' when unknown. */
+export function wasmDetectFormat(input: string): Promise<string> {
+  return loadModule().then((mod) => mod.detectFormat(input));
 }
 
 /* ---------------- Pitch ---------------- */

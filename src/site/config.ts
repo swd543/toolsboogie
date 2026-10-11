@@ -93,22 +93,11 @@ export const tools: ToolDef[] = [
     icon: 'tuner',
   },
   {
-    path: '/json-format',
-    label: 'JSON format',
-    blurb: 'Pretty-print, minify and validate JSON with exact error positions.',
-    icon: 'braces',
-  },
-  {
-    path: '/json-to-yaml',
-    label: 'JSON → YAML',
-    blurb: 'Convert JSON to clean YAML - no round-tripping through a server.',
+    path: '/convert',
+    label: 'Data converter',
+    blurb:
+      'JSON, YAML, TOML, INI and XML to each other - format, validate and reshape, in-browser.',
     icon: 'swap',
-  },
-  {
-    path: '/yaml-format',
-    label: 'YAML format',
-    blurb: 'Validate and re-format YAML, or convert it back to JSON.',
-    icon: 'yaml',
   },
   {
     path: '/regex',

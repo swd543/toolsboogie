@@ -5,8 +5,10 @@
 //!
 //! * [`json`] — format / minify JSON with exact error positions
 //!   (serde_json, insertion- or sorted-key order).
-//! * [`yaml`] — YAML ↔ JSON conversion and YAML re-formatting
+//! * [`yaml`] - YAML ↔ JSON conversion and YAML re-formatting
 //!   (serde_yaml on top of libyaml).
+//! * [`data`] - unified JSON / YAML / TOML / INI conversion (serde_json
+//!   normalized tree, toml, rust-ini).
 //! * [`pitch`] — FFT-based pitch detection for the guitar tuner:
 //!   autocorrelation peak-picking with parabolic interpolation for the
 //!   note, plus a log-spaced magnitude spectrum for the visualizer.
@@ -14,11 +16,15 @@
 //! Deliberately kept tiny and dependency-light. The `rlib` crate type
 //! lets the same code run under `cargo test` on the host target.
 
+mod anchor_yaml;
+mod data;
 mod json;
 mod notes;
 mod pitch;
+mod xml_data;
 mod yaml;
 
+pub use data::{data_convert, detect_format};
 pub use json::{json_format, json_minify};
 pub use notes::{midi_name, midi_to_hz, nearest_midi};
 pub use pitch::pitch_detect;

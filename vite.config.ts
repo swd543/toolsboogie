@@ -36,7 +36,9 @@ export default defineConfig({
     prerender: {
       // Entry point for the crawler; every tool page is linked from here
       // (header nav + footer + home grid) so crawlLinks covers them all.
-      routes: ['/'],
+      // The retired routes are not linked anywhere anymore, so they are
+      // listed explicitly - their redirect stubs still need to prerender.
+      routes: ['/', '/json-format', '/json-to-yaml', '/yaml-format'],
       crawlLinks: true,
       failOnError: true,
     },

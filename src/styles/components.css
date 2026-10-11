@@ -1966,3 +1966,57 @@ input[type="range"] {
   color: var(--ink-faint);
   font-size: 0.85rem;
 }
+
+/* Data converter: the 20 per-path link grid */
+.convert-paths {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+.convert-paths h2 {
+  font-size: 1.05rem;
+  margin: 0 0 0.35rem;
+}
+.convert-paths-hint {
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+  margin: 0 0 1rem;
+}
+.convert-paths ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 0.5rem;
+}
+.convert-paths li a {
+  display: block;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  color: var(--ink);
+  font-size: 0.85rem;
+  background: var(--bg-raised);
+  transition:
+    border-color 120ms ease,
+    transform 120ms ease;
+}
+.convert-paths li a:hover {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
+  transform: translateY(-1px);
+}
+
+/* Redirect stubs (retired tool URLs) */
+.redirect-stub {
+  max-width: 40rem;
+  margin: 4rem auto;
+  padding: 0 1rem;
+  text-align: center;
+}
+.redirect-stub h1 {
+  font-size: 1.3rem;
+}
+.redirect-stub p {
+  color: var(--ink-muted);
+}

@@ -43,9 +43,13 @@ console.log('[postbuild] copied .output/public → dist');
 const routes = [
   '/',
   '/guitar-tuner',
-  '/json-format',
-  '/json-to-yaml',
-  '/yaml-format',
+  '/convert',
+  // The 20 per-path converter URLs (json-to-yaml, xml-to-ini, …).
+  ...['json', 'yaml', 'toml', 'ini', 'xml'].flatMap((from) =>
+    ['json', 'yaml', 'toml', 'ini', 'xml']
+      .filter((to) => to !== from)
+      .map((to) => `/convert/${from}-to-${to}`),
+  ),
   '/regex',
   '/string-escape',
   '/time',

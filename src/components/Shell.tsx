@@ -292,6 +292,12 @@ export function CodePanel(props: {
           <textarea
             class="code-edit"
             value={props.value}
+            ref={(el) => {
+              // The HTML parser ignores a `value` attribute on <textarea> (the
+              // initial value is the tag's content), so SSR-prefilled values
+              // arrive empty after hydration. Sync the DOM property once.
+              el.value = props.value;
+            }}
             spellcheck={false}
             rows={14}
             aria-label={props.label}
