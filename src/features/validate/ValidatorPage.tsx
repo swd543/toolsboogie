@@ -82,6 +82,17 @@ export function ValidatorPage(props: Props) {
   onCleanup(() => clearTimeout(timer));
   onMount(() => scheduleStatus());
 
+  /** Sample/Clear change the input programmatically - the onInput handler
+   *  does not fire, so the live status must be (re)scheduled explicitly. */
+  const loadSample = () => {
+    setInput(SAMPLES[props.format]);
+    scheduleStatus();
+  };
+  const clearInput = () => {
+    setInput('');
+    scheduleStatus();
+  };
+
   /** Parse-check the input and show the verdict in the result panel. */
   const runValidate = async () => {
     if (!input().trim()) {
@@ -94,6 +105,7 @@ export function ValidatorPage(props: Props) {
     try {
       const r = await validateSummary(input(), props.format);
       setOutput(r.ok ? `✓ Valid ${name()} - ${r.detail}` : `✗ ${r.detail}`);
+      if (r.ok) setValid('ok');
     } finally {
       setBusy(false);
     }
@@ -177,14 +189,10 @@ export function ValidatorPage(props: Props) {
           stat={statusText() || undefined}
           actions={
             <span class="code-actions">
-              <button
-                type="button"
-                class="btn btn-sm btn-ghost"
-                onClick={() => setInput(SAMPLES[props.format])}
-              >
+              <button type="button" class="btn btn-sm btn-ghost" onClick={loadSample}>
                 Sample
               </button>
-              <button type="button" class="btn btn-sm btn-ghost" onClick={() => setInput('')}>
+              <button type="button" class="btn btn-sm btn-ghost" onClick={clearInput}>
                 Clear
               </button>
             </span>

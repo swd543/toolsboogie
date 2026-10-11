@@ -166,12 +166,31 @@ export function ConverterPage(props: Props) {
       if (r.detected) {
         setDetected(r.from);
       }
+      // The input parsed: a stale 'invalid' from the live check is settled.
+      setValid('ok');
     } catch (e) {
       setOutput('');
-      setError(coreUnavailableMessage(e) ?? (e instanceof Error ? e.message : String(e)));
+      const msg = coreUnavailableMessage(e) ?? (e instanceof Error ? e.message : String(e));
+      setError(msg);
+      // Keep the live status and the error card in agreement on parse
+      // failures (render failures like the null policy leave validity as-is).
+      if (msg.startsWith('Invalid') || msg.startsWith('Could not detect')) {
+        setValid(msg);
+      }
     } finally {
       setBusy(false);
     }
+  };
+
+  /** Sample/Clear change the input programmatically - the onInput handler
+   *  does not fire, so the live status must be (re)scheduled explicitly. */
+  const loadSample = () => {
+    setInput(sampleFor(fromSel()));
+    scheduleStatus();
+  };
+  const clearInput = () => {
+    setInput('');
+    scheduleStatus();
   };
 
   /** Parse-check the input (no conversion) and show the result in the output panel. */
@@ -384,14 +403,10 @@ export function ConverterPage(props: Props) {
           stat={statusText() || undefined}
           actions={
             <span class="code-actions">
-              <button
-                type="button"
-                class="btn btn-sm btn-ghost"
-                onClick={() => setInput(sampleFor(fromSel()))}
-              >
+              <button type="button" class="btn btn-sm btn-ghost" onClick={loadSample}>
                 Sample
               </button>
-              <button type="button" class="btn btn-sm btn-ghost" onClick={() => setInput('')}>
+              <button type="button" class="btn btn-sm btn-ghost" onClick={clearInput}>
                 Clear
               </button>
             </span>
