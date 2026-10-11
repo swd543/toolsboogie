@@ -7,6 +7,7 @@ import { AdSlot } from '~/components/AdSlot';
 import {
   BoltTiny,
   BracesIcon,
+  CheckIcon,
   CompassIcon,
   CronIcon,
   EscapeIcon,
@@ -37,6 +38,7 @@ const ICONS: Record<ToolDef['icon'], (props: IconProps) => ReturnType<typeof Tun
   compass: CompassIcon,
   ruler: RulerIcon,
   level: LevelIcon,
+  check: CheckIcon,
 };
 
 export default function Home() {

@@ -54,6 +54,41 @@ export const routeMeta: Record<string, RouteMeta> = {
       '100% in your browser - nothing is uploaded.',
     image: ogImage,
   },
+  '/json-validator': {
+    title: 'JSON Validator - Free, Private, In-Browser (No Upload) | ToolsBoogie',
+    description:
+      'Validate JSON right in your browser: paste it and get an instant verdict with the exact parser ' +
+      'error when it is not valid - a structure summary when it is. Free, private, no upload.',
+    image: ogImage,
+  },
+  '/yaml-validator': {
+    title: 'YAML Validator - Free, Private, In-Browser (No Upload) | ToolsBoogie',
+    description:
+      'Validate YAML right in your browser: paste it and get an instant verdict - indentation, anchors ' +
+      'and merge keys included - with the exact parser error when invalid. Free, private, no upload.',
+    image: ogImage,
+  },
+  '/toml-validator': {
+    title: 'TOML Validator - Free, Private, In-Browser (No Upload) | ToolsBoogie',
+    description:
+      'Validate TOML right in your browser: paste it and get an instant verdict - strict types, tables ' +
+      'and dates - with the exact parser error when invalid. Free, private, no upload.',
+    image: ogImage,
+  },
+  '/ini-validator': {
+    title: 'INI Validator - Free, Private, In-Browser (No Upload) | ToolsBoogie',
+    description:
+      'Validate INI files right in your browser: paste [section] key=value content and get an instant ' +
+      'verdict with the exact parser error when invalid. Free, private, no upload.',
+    image: ogImage,
+  },
+  '/xml-validator': {
+    title: 'XML Validator - Free, Private, In-Browser (No Upload) | ToolsBoogie',
+    description:
+      'Validate XML right in your browser: paste it and get an instant verdict - well-formedness, ' +
+      'matched tags, single root - with the exact parser error when invalid. Free, private, no upload.',
+    image: ogImage,
+  },
   '/json-format': {
     title: 'JSON Formatter - now in the Data Converter | ToolsBoogie',
     description:
@@ -195,6 +230,12 @@ function toolSubcategory(route: string): string {
     case '/regex':
     case '/string-escape':
     case '/cron':
+      return 'Developer Tool';
+    case '/json-validator':
+    case '/yaml-validator':
+    case '/toml-validator':
+    case '/ini-validator':
+    case '/xml-validator':
       return 'Developer Tool';
     case '/time':
       return 'Reference';

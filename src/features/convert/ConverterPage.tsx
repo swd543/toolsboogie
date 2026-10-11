@@ -7,7 +7,15 @@
  * parse-only Validate action. Each path page prefills its own sample in its
  * source format.
  */
-import { createEffect, createMemo, createSignal, onCleanup, onMount, Show } from 'solid-js';
+import {
+  createEffect,
+  createMemo,
+  createSignal,
+  onCleanup,
+  onMount,
+  Show,
+  untrack,
+} from 'solid-js';
 import { AdSlot } from '~/components/AdSlot';
 import { AlertIcon, CopyIcon, DownloadIcon, SpinnerIcon } from '~/components/Icons';
 import { CodePanel, ToolColumns, ToolPage } from '~/components/Shell';
@@ -72,8 +80,10 @@ export function ConverterPage(props: Props) {
 
   /* Live status: debounced format detection + validation of the input. */
   let timer: ReturnType<typeof setTimeout> | undefined;
+  let statusGen = 0;
   const scheduleStatus = () => {
     clearTimeout(timer);
+    const gen = ++statusGen;
     const text = input();
     if (!text.trim()) {
       setDetected('');
@@ -81,19 +91,31 @@ export function ConverterPage(props: Props) {
       return;
     }
     timer = setTimeout(() => {
-      if (fromSel() === AUTO) {
-        void wasmDetectFormat(text)
-          .catch(() => '')
-          .then((d) => setDetected(d));
-      } else {
-        setDetected('');
-      }
-      const src = fromSel() === AUTO ? detected() || 'json' : fromSel();
-      void validate(text, src as DataFormat)
-        .then(() => setValid('ok'))
-        .catch((e) =>
-          setValid(coreUnavailableMessage(e) ?? (e instanceof Error ? e.message : String(e))),
-        );
+      void (async () => {
+        // Detect first, then validate against the detected format. The old
+        // flow validated against the stale detection (or the json fallback)
+        // in the same tick and reported "invalid" for input that was valid
+        // in its own format - while the Convert action (which re-detects)
+        // succeeded, so the status and the action disagreed.
+        let src: DataFormat;
+        if (fromSel() === AUTO) {
+          const d = await wasmDetectFormat(text).catch(() => '');
+          if (gen !== statusGen) return; // superseded by newer input
+          setDetected(d);
+          src = d !== '' ? (d as DataFormat) : 'json';
+        } else {
+          setDetected('');
+          src = fromSel() as DataFormat;
+        }
+        try {
+          await validate(text, src);
+          if (gen !== statusGen) return;
+          setValid('ok');
+        } catch (e) {
+          if (gen !== statusGen) return;
+          setValid(coreUnavailableMessage(e) ?? (e instanceof Error ? e.message : String(e)));
+        }
+      })();
     }, 250);
   };
   onCleanup(() => clearTimeout(timer));
@@ -115,6 +137,10 @@ export function ConverterPage(props: Props) {
     setResultKind('convert');
     setDetected('');
     setValid('');
+    // untrack: scheduleStatus reads the input signal; without this the
+    // effect would re-run on every keystroke and reset the input to the
+    // sample.
+    untrack(() => scheduleStatus());
   });
 
   const run = async () => {
@@ -203,6 +229,11 @@ export function ConverterPage(props: Props) {
           path: `/convert/${p.slug}`,
           label: `${formatById(p.from)!.label} → ${formatById(p.to)!.label}`,
           group: 'Conversion paths',
+        })),
+        ...(['json', 'yaml', 'toml', 'ini', 'xml'] as (DataFormat | 'auto')[]).map((f) => ({
+          path: `/${f}-validator`,
+          label: `${formatById(f as DataFormat)!.label} validator`,
+          group: 'Validators',
         })),
         { path: '/regex', label: 'Regex checker', group: 'More tools' },
         { path: '/string-escape', label: 'String escaper', group: 'More tools' },

@@ -82,7 +82,8 @@ export interface ToolDef {
     | 'key'
     | 'compass'
     | 'ruler'
-    | 'level';
+    | 'level'
+    | 'check';
 }
 
 export const tools: ToolDef[] = [
@@ -98,6 +99,36 @@ export const tools: ToolDef[] = [
     blurb:
       'JSON, YAML, TOML, INI and XML to each other - format, validate and reshape, in-browser.',
     icon: 'swap',
+  },
+  {
+    path: '/json-validator',
+    label: 'JSON validator',
+    blurb: 'Paste JSON, get an instant verdict with the exact parser error when it is not.',
+    icon: 'check',
+  },
+  {
+    path: '/yaml-validator',
+    label: 'YAML validator',
+    blurb: 'Check YAML - indentation, anchors and merge keys - before it hits CI.',
+    icon: 'check',
+  },
+  {
+    path: '/toml-validator',
+    label: 'TOML validator',
+    blurb: 'Check TOML - strict types, tables and dates - with the exact parser error.',
+    icon: 'check',
+  },
+  {
+    path: '/ini-validator',
+    label: 'INI validator',
+    blurb: 'Check [section] key=value files - with the exact parser error when not.',
+    icon: 'check',
+  },
+  {
+    path: '/xml-validator',
+    label: 'XML validator',
+    blurb: 'Check well-formedness, matched tags and the single-root rule.',
+    icon: 'check',
   },
   {
     path: '/regex',

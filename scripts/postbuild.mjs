@@ -50,6 +50,12 @@ const routes = [
       .filter((to) => to !== from)
       .map((to) => `/convert/${from}-to-${to}`),
   ),
+  // The five dedicated validators.
+  '/json-validator',
+  '/yaml-validator',
+  '/toml-validator',
+  '/ini-validator',
+  '/xml-validator',
   '/regex',
   '/string-escape',
   '/time',

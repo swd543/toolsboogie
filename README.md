@@ -14,12 +14,14 @@ upload to. No account, no analytics, no cookies.
   sharp/flat note notation
   with a cent-accurate needle, note history, and the six standard strings as
   one-tap targets. Web Audio API + AudioWorklet; SIMD in the FFT.
-- **JSON formatter** - pretty-print / minify with key sorting and syntax
-  highlighting. Fast path runs in Rust/WASM (`serde_json`), with a pure-JS
-  fallback.
-- **JSON → YAML** - convert with indentation, line-width and quote-style
-  options (WASM core, `serde_yaml`-style emitter).
-- **YAML formatter** - validate and re-emit YAML cleanly (WASM core).
+- **Data converter** - JSON, YAML, TOML, INI and XML to each other, every
+  pair on its own URL: format auto-detection, key sorting, JSON indent /
+  minify, XML minify, YAML anchor/merge deduplication and a null policy for
+  the formats without null. All parsing and rendering runs in the Rust/WASM
+  core (`serde_json`, `serde_yaml`, `toml`, `rust-ini`, `quick-xml`).
+- **Validators** - dedicated JSON, YAML, TOML, INI and XML validator pages:
+  a live parse check while you type and the exact parser error when the
+  input is not valid, with a structure summary when it is.
 - **JWT decode / encode / modify** - decode any JWT (header + claims with
   exp/iat/nbf status), edit claims and re-sign with HS256/384/512,
   RS256/384/512, or ES256/384/512 via WebCrypto (PEM or JWK keys). Signing

@@ -26,7 +26,19 @@ const NAV_GROUPS: {
     id: 'dev',
     label: 'Dev tools',
     tone: 'dev',
-    paths: ['/convert', '/jwt', '/regex', '/string-escape', '/time', '/cron'],
+    paths: [
+      '/convert',
+      '/json-validator',
+      '/yaml-validator',
+      '/toml-validator',
+      '/ini-validator',
+      '/xml-validator',
+      '/jwt',
+      '/regex',
+      '/string-escape',
+      '/time',
+      '/cron',
+    ],
   },
 ];
 const groupTools = (paths: string[]) =>
@@ -243,7 +255,7 @@ export function ToolPage(props: {
             {r.group && (i === 0 || props.related?.[i - 1]?.group !== r.group) ? (
               <span class="related-group">{r.group}</span>
             ) : null}
-            <a href={r.path}>{r.label} →</a>
+            <a href={r.path}>{r.label}</a>
           </>
         ))}
       </div>
