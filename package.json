@@ -29,7 +29,7 @@
     "solid-js": "^1.9.15"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.14",
+    "@biomejs/biome": "^2.5.15",
     "@types/node": "^26.6.2",
     "@webgpu/types": "^0.1.74",
     "typescript": "^7.0.2",
