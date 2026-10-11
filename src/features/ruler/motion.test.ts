@@ -122,6 +122,26 @@ describe('gravity + integration', () => {
     expect(readingM(s)).toBeLessThan(0.55);
   });
 
+  it('a slow steady slide is fully measured (not absorbed into gravity)', () => {
+    // 0.5 m/s^2 is BELOW the rest threshold: before the anchor freeze it
+    // was re-classified as gravity and the reading went to zero.
+    const s = initSlide();
+    let t = 0;
+    for (let i = 0; i < 60; i += 1) {
+      feed(s, { t, raw: { x: 0, y: 0, z: -9.81 }, linear: null });
+      t += 16.7;
+    }
+    anchor(s);
+    for (let i = 0; i < 30; i += 1) {
+      feed(s, { t, raw: { x: 0, y: 0.5, z: -9.81 }, linear: null });
+      t += 16.7;
+    }
+    const got = readingM(s);
+    const ideal = 0.5 * 0.5 * 0.25; // 0.5 m/s^2 x 0.5 s
+    expect(got).toBeGreaterThan(0.045);
+    expect(got).toBeLessThan(ideal * 1.15);
+  });
+
   it('clamps huge sample gaps instead of integrating them', () => {
     const s = initSlide();
     anchor(s);

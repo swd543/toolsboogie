@@ -1349,6 +1349,16 @@ input[type="range"] {
 /*  Ruler                                                              */
 /* ------------------------------------------------------------------ */
 
+/* The ruler page is a press-and-hold measurement surface: suppress
+   text selection, the tap highlight and iOS callouts so a long press
+   (the anchor gesture) is not confused with a long tap. */
+.ruler-page {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* Full-viewport overlay carrying the two edge rulers. It sits below the
    sticky header (z 20) so the header occludes the strips' top corners,
    and ignores pointer events so the page underneath keeps working. */

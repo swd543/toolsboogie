@@ -55,6 +55,8 @@ const LABEL_X = 18;
 const SCROLL_CANCEL_PX = 12;
 /** UI update throttle for the live slide reading (ms). */
 const UI_INTERVAL_MS = 80;
+/** Canvas redraw throttle while sliding (~30 fps; rAF coalesces further). */
+const DRAW_INTERVAL_MS = 33;
 /** Elements that keep working while the ruler overlay is up. */
 const INTERACTIVE = 'button, a, input, select, textarea, .site-nav-drop, .ruler-measure';
 
@@ -86,6 +88,7 @@ export default function RulerPage() {
   const slide: SlideState = initSlide();
   let gotMotion = false;
   let lastUiT = 0;
+  let lastDrawT = 0;
   const [reading, setReading] = createSignal(0); // metres
   const [anchored, setAnchored] = createSignal(false);
   const [sensed, setSensed] = createSignal(false);
@@ -161,15 +164,20 @@ export default function RulerPage() {
 
     // Zero sits just below the sticky header.
     const y0 = document.querySelector<HTMLElement>('.site-header')?.offsetHeight ?? 58;
-    const len = h - y0;
-    const ticks = generateTicks(len, cc);
+    // The scale scrolls along with the phone's slide (opposite to the
+    // phone's motion), so it stays pinned to the object being measured:
+    // slide the phone down and the ticks travel up, exactly like tape.
+    const pxPerMeter = 1000 / cc.mmPerPx;
+    const offsetPx = slide.disp * pxPerMeter;
+    const genLen = h + Math.abs(offsetPx);
+    const ticks = generateTicks(genLen, cc);
     const tickLen = (k: 'minor' | 'medium' | 'major') =>
       k === 'major' ? 16 : k === 'medium' ? 11 : 7;
 
     // LEFT strip: metric, zero at the top, ticks pointing inward (right).
     for (const t of ticks.metric) {
-      const y = y0 + t.x;
-      if (y > h) continue;
+      const y = y0 + t.x + offsetPx;
+      if (y < -20 || y > h + 20) continue;
       g.beginPath();
       g.moveTo(0.75, y);
       g.lineTo(tickLen(t.kind), y);
@@ -179,8 +187,8 @@ export default function RulerPage() {
     }
     // RIGHT strip: imperial, zero at the top, ticks pointing inward (left).
     for (const t of ticks.imperial) {
-      const y = y0 + t.x;
-      if (y > h) continue;
+      const y = y0 + t.x + offsetPx;
+      if (y < -20 || y > h + 20) continue;
       g.beginPath();
       g.moveTo(w - 0.75, y);
       g.lineTo(w - tickLen(t.kind), y);
@@ -195,18 +203,18 @@ export default function RulerPage() {
     // Metric labels (left strip).
     for (const t of ticks.metric) {
       if (t.label === undefined) continue;
-      const y = y0 + t.x;
-      if (t.label !== '0' && (y < y0 + 8 || y > h - 8)) continue;
+      const y = y0 + t.x + offsetPx;
+      if (y < 10 || y > h - 10) continue;
       g.textAlign = 'left';
-      g.fillText(t.label, LABEL_X, t.label === '0' ? y0 + 12 : y);
+      g.fillText(t.label, LABEL_X, y);
     }
     // Imperial labels (right strip).
     for (const t of ticks.imperial) {
       if (t.label === undefined) continue;
-      const y = y0 + t.x;
-      if (t.label !== '0' && (y < y0 + 8 || y > h - 8)) continue;
+      const y = y0 + t.x + offsetPx;
+      if (y < 10 || y > h - 10) continue;
       g.textAlign = 'right';
-      g.fillText(t.label, w - LABEL_X, t.label === '0' ? y0 + 12 : y);
+      g.fillText(t.label, w - LABEL_X, y);
     }
     // Unit hints at each edge, just below the zero line.
     g.font = '9px ui-sans-serif, sans-serif';
@@ -227,12 +235,12 @@ export default function RulerPage() {
     g.lineTo(w - 0.75, h);
     g.stroke();
     g.beginPath();
-    g.moveTo(0, y0);
-    g.lineTo(STRIP_W, y0);
+    g.moveTo(0, y0 + offsetPx);
+    g.lineTo(STRIP_W, y0 + offsetPx);
     g.stroke();
     g.beginPath();
-    g.moveTo(w - STRIP_W, y0);
-    g.lineTo(w, y0);
+    g.moveTo(w - STRIP_W, y0 + offsetPx);
+    g.lineTo(w, y0 + offsetPx);
     g.stroke();
 
     // Anchor dot: the zero point of the current slide.
@@ -281,6 +289,11 @@ export default function RulerPage() {
         lastUiT = now;
         setReading(readingM(slide));
       }
+      // Redraw so the scale visibly scrolls along with the slide.
+      if (now - lastDrawT > DRAW_INTERVAL_MS) {
+        lastDrawT = now;
+        scheduleDraw();
+      }
     } else {
       // Keep the gravity estimate fresh while at rest.
       feed(slide, sample);
@@ -289,6 +302,13 @@ export default function RulerPage() {
 
   const isInteractive = (t: EventTarget | null) =>
     t instanceof Element && t.closest(INTERACTIVE) !== null;
+
+  /** A long press on the measurement surface must not open the context
+   *  menu (or start a text selection) - the press is the anchor gesture. */
+  const onContextMenu = (e: Event) => {
+    if (isInteractive(e.target)) return; // inputs/buttons keep their menus
+    e.preventDefault();
+  };
 
   const onWinDown = (e: PointerEvent) => {
     if (isInteractive(e.target)) return;
@@ -428,6 +448,7 @@ export default function RulerPage() {
     addEventListener('pointermove', onWinMove);
     addEventListener('pointerup', onWinUp);
     addEventListener('pointercancel', onWinUp);
+    addEventListener('contextmenu', onContextMenu);
     themeQuery?.addEventListener('change', onThemeChange);
     scheduleDraw();
   });
@@ -440,6 +461,7 @@ export default function RulerPage() {
       removeEventListener('pointermove', onWinMove);
       removeEventListener('pointerup', onWinUp);
       removeEventListener('pointercancel', onWinUp);
+      removeEventListener('contextmenu', onContextMenu);
     }
     themeQuery?.removeEventListener('change', onThemeChange);
     if (hasRaf) cancelAnimationFrame(raf);
@@ -469,153 +491,160 @@ export default function RulerPage() {
           </button>
         </Show>
       </div>
-      <ToolPage
-        tone="measure"
-        title="On-screen ruler"
-        lede="A literal ruler on the edges of your screen: metric down the left edge, imperial down the right, each zero at the top. Objects that fit the screen read straight off the scale. For anything longer, press the screen to anchor at zero, slide the phone along the object and lift - the motion sensor estimates the distance you slid (an approximation; steady slides read best, and pressing again resets to zero). The on-screen scale calibrates itself from your screen's pixel density (96 x devicePixelRatio - an estimate, flagged as such); enter your display's real size for exactness."
-        related={[
-          { path: '/level', label: 'Level' },
-          { path: '/compass', label: 'Compass' },
-        ]}
-      >
-        <ToolColumns
-          aside={
-            <>
-              <div class="opt-group">
-                <span class="opt-label">Slide measurement</span>
-                <p class="opt-hint">
-                  For objects longer than the screen: hold the phone flat in portrait, press the
-                  screen to anchor at zero, slide the phone along the object and lift. The motion
-                  sensor estimates the distance slid - an approximation, best with a steady slide.
-                  Pressing again resets to zero.
-                </p>
-                <p class="opt-hint">
-                  The slide reading needs a motion sensor (phones and tablets); on a desktop it
-                  stays at zero and the on-screen scale is the tool.
-                </p>
-              </div>
+      <div class="ruler-page">
+        <ToolPage
+          tone="measure"
+          title="On-screen ruler"
+          lede="A literal ruler on the edges of your screen: metric down the left edge, imperial down the right, each zero at the top. Objects that fit the screen read straight off the scale. For anything longer, press the screen to anchor at zero, then slide the phone along the object - the ruler travels along with your slide (like tape), driven by the motion sensor (an approximation; steady slides read best). Lift to read, press again to reset to zero. The on-screen scale calibrates itself from your screen's pixel density (96 x devicePixelRatio - an estimate, flagged as such); enter your display's real size for exactness."
+          related={[
+            { path: '/level', label: 'Level' },
+            { path: '/compass', label: 'Compass' },
+          ]}
+        >
+          <ToolColumns
+            aside={
+              <>
+                <div class="opt-group">
+                  <span class="opt-label">Slide measurement</span>
+                  <p class="opt-hint">
+                    For objects longer than the screen: hold the phone flat in portrait, press the
+                    screen to anchor at zero, then slide the phone along the object. The ruler
+                    scrolls along with your slide (opposite to it, like tape on the object), driven
+                    by the motion sensor - an approximation, best with a steady slide. Lift to read;
+                    pressing again resets to zero.
+                  </p>
+                  <p class="opt-hint">
+                    The slide reading needs a motion sensor (phones and tablets); on a desktop it
+                    stays at zero and the on-screen scale is the tool.
+                  </p>
+                </div>
 
-              <div class="opt-group">
-                <span class="opt-label">Calibration</span>
-                <Show
-                  when={cal() !== null}
-                  fallback={
-                    <>
+                <div class="opt-group">
+                  <span class="opt-label">Calibration</span>
+                  <Show
+                    when={cal() !== null}
+                    fallback={
+                      <>
+                        <p class="opt-hint">
+                          Not calibrated - re-infer from this screen, or enter your display size
+                          below. (Measuring a sheet of paper held against the screen works too, if
+                          you don't know its specs.)
+                        </p>
+                        <button type="button" class="btn btn-sm btn-ghost" onClick={reinfer}>
+                          Re-infer from screen
+                        </button>
+                      </>
+                    }
+                  >
+                    <p class="opt-hint" style="color: var(--ok)">
+                      {cal()!.estimated ? 'Estimated:' : 'Calibrated:'} <b>{cal()!.source}</b>
+                    </p>
+                    {cal()!.estimated ? (
                       <p class="opt-hint">
-                        Not calibrated - re-infer from this screen, or enter your display size
-                        below. (Measuring a sheet of paper held against the screen works too, if you
-                        don't know its specs.)
+                        This estimate assumes the classic 96-DPI model scaled by your device pixel
+                        ratio. Enter your screen's real size below for exactness.
                       </p>
+                    ) : null}
+                    <div style="display: flex; gap: 0.5rem">
                       <button type="button" class="btn btn-sm btn-ghost" onClick={reinfer}>
                         Re-infer from screen
                       </button>
-                    </>
-                  }
-                >
-                  <p class="opt-hint" style="color: var(--ok)">
-                    {cal()!.estimated ? 'Estimated:' : 'Calibrated:'} <b>{cal()!.source}</b>
-                  </p>
-                  {cal()!.estimated ? (
-                    <p class="opt-hint">
-                      This estimate assumes the classic 96-DPI model scaled by your device pixel
-                      ratio. Enter your screen's real size below for exactness.
-                    </p>
-                  ) : null}
-                  <div style="display: flex; gap: 0.5rem">
-                    <button type="button" class="btn btn-sm btn-ghost" onClick={reinfer}>
-                      Re-infer from screen
-                    </button>
-                    <button type="button" class="btn btn-sm btn-ghost" onClick={() => setCal(null)}>
-                      Reset
-                    </button>
-                  </div>
-                </Show>
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-ghost"
+                        onClick={() => setCal(null)}
+                      >
+                        Reset
+                      </button>
+                    </div>
+                  </Show>
 
-                <div class="field">
-                  <span>Screen width</span>
-                  <div style="display: flex; gap: 0.5rem">
+                  <div class="field">
+                    <span>Screen width</span>
+                    <div style="display: flex; gap: 0.5rem">
+                      <input
+                        class="num-input"
+                        type="number"
+                        min="5"
+                        step="0.1"
+                        placeholder="34.0"
+                        aria-label="Screen width"
+                        id="rw-len"
+                      />
+                      <select
+                        aria-label="Screen width unit"
+                        onChange={(e) => {
+                          const lenEl = document.getElementById('rw-len');
+                          const len = Number(lenEl instanceof HTMLInputElement ? lenEl.value : '');
+                          if (len > 0) {
+                            const u = e.currentTarget.value;
+                            const mm = u === 'cm' ? len * 10 : u === 'inch' ? len * 25.4 : len;
+                            applyCalibration(calibrateFromScreen(mm, widthPx() || 1000));
+                          }
+                        }}
+                      >
+                        <option value="cm">cm</option>
+                        <option value="mm">mm</option>
+                        <option value="inch">inches</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <span>… or PPI</span>
                     <input
                       class="num-input"
                       type="number"
-                      min="5"
-                      step="0.1"
-                      placeholder="34.0"
-                      aria-label="Screen width"
-                      id="rw-len"
-                    />
-                    <select
-                      aria-label="Screen width unit"
-                      onChange={(e) => {
-                        const lenEl = document.getElementById('rw-len');
-                        const len = Number(lenEl instanceof HTMLInputElement ? lenEl.value : '');
-                        if (len > 0) {
-                          const u = e.currentTarget.value;
-                          const mm = u === 'cm' ? len * 10 : u === 'inch' ? len * 25.4 : len;
-                          applyCalibration(calibrateFromScreen(mm, widthPx() || 1000));
-                        }
+                      min="1"
+                      step="1"
+                      placeholder="e.g. 96"
+                      aria-label="Pixels per inch"
+                      onInput={(e) => {
+                        const ppi = Number(e.currentTarget.value);
+                        if (ppi > 0) applyCalibration(calibrateFromPpi(ppi));
                       }}
-                    >
-                      <option value="cm">cm</option>
-                      <option value="mm">mm</option>
-                      <option value="inch">inches</option>
-                    </select>
+                    />
                   </div>
-                </div>
-                <div class="field">
-                  <span>… or PPI</span>
-                  <input
-                    class="num-input"
-                    type="number"
-                    min="1"
-                    step="1"
-                    placeholder="e.g. 96"
-                    aria-label="Pixels per inch"
-                    onInput={(e) => {
-                      const ppi = Number(e.currentTarget.value);
-                      if (ppi > 0) applyCalibration(calibrateFromPpi(ppi));
-                    }}
-                  />
-                </div>
 
-                <span class="opt-label" style="margin-top: 0.75rem">
-                  Measure in
-                </span>
-                <div class="flag-row">
-                  {(['cm', 'mm', 'inch'] as Unit[]).map((u) => (
-                    <button
-                      type="button"
-                      class={`chip ${unit() === u ? 'is-on' : ''}`}
-                      aria-pressed={unit() === u}
-                      onClick={() => setUnitPersist(u)}
-                    >
-                      {u === 'inch' ? 'inches' : u}
-                    </button>
-                  ))}
+                  <span class="opt-label" style="margin-top: 0.75rem">
+                    Measure in
+                  </span>
+                  <div class="flag-row">
+                    {(['cm', 'mm', 'inch'] as Unit[]).map((u) => (
+                      <button
+                        type="button"
+                        class={`chip ${unit() === u ? 'is-on' : ''}`}
+                        aria-pressed={unit() === u}
+                        onClick={() => setUnitPersist(u)}
+                      >
+                        {u === 'inch' ? 'inches' : u}
+                      </button>
+                    ))}
+                  </div>
+                  <p class="opt-hint">
+                    Screen width = your display's measured edge length in the current orientation
+                    (phone: the shorter edge). A typical 13″ laptop is ≈ 29.6 cm wide.
+                  </p>
                 </div>
-                <p class="opt-hint">
-                  Screen width = your display's measured edge length in the current orientation
-                  (phone: the shorter edge). A typical 13″ laptop is ≈ 29.6 cm wide.
-                </p>
-              </div>
-            </>
-          }
-        >
-          <div class="opt-group" style="margin-top: 0">
-            <span class="opt-label">On-screen scale</span>
-            <p class="opt-hint">
-              {cal()
-                ? `Ruler length (top to bottom): ${fullHeightText() || '—'}`
-                : 'Re-infer or calibrate to read lengths.'}{' '}
-              {viewportText() !== ''
-                ? `Viewport: ${viewportText()}${cal()!.estimated ? ' (estimated)' : ''}`
-                : ''}{' '}
-              The ruler uses your browser's CSS pixels, so browser zoom scales it - keep zoom at
-              100% for real-world readings.
-            </p>
-          </div>
-          <AdSlot slot="tool-bottom" />
-        </ToolColumns>
-      </ToolPage>
+              </>
+            }
+          >
+            <div class="opt-group" style="margin-top: 0">
+              <span class="opt-label">On-screen scale</span>
+              <p class="opt-hint">
+                {cal()
+                  ? `Ruler length (top to bottom): ${fullHeightText() || '—'}`
+                  : 'Re-infer or calibrate to read lengths.'}{' '}
+                {viewportText() !== ''
+                  ? `Viewport: ${viewportText()}${cal()!.estimated ? ' (estimated)' : ''}`
+                  : ''}{' '}
+                The ruler uses your browser's CSS pixels, so browser zoom scales it - keep zoom at
+                100% for real-world readings.
+              </p>
+            </div>
+            <AdSlot slot="tool-bottom" />
+          </ToolColumns>
+        </ToolPage>
+      </div>
     </>
   );
 }

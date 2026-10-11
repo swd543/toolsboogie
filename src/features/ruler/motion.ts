@@ -102,12 +102,15 @@ export function feed(s: SlideState, m: MotionSample): void {
   const raw = m.raw;
   if (!raw || !finite(raw.x) || !finite(raw.y) || !finite(raw.z)) return;
 
-  // Keep the gravity estimate current - but only while at rest, so a
-  // slide's real acceleration is not absorbed into the "gravity" value.
+  // Keep the gravity estimate current - but ONLY at rest while not
+  // measuring. Once anchored, the estimate is frozen and everything that
+  // deviates from it is slide signal; re-converging during a slide would
+  // absorb a slow steady slide (< the rest threshold) into "gravity" and
+  // the reading would go to zero.
   if (!s.gSeeded) {
     s.g = { x: raw.x, y: raw.y, z: raw.z };
     s.gSeeded = true;
-  } else {
+  } else if (!s.anchored) {
     const mag = Math.hypot(raw.x - s.g.x, raw.y - s.g.y, raw.z - s.g.z);
     if (mag < REST_THRESHOLD) {
       s.g.x = GRAVITY_SMOOTH * s.g.x + (1 - GRAVITY_SMOOTH) * raw.x;
