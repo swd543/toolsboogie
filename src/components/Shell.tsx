@@ -27,9 +27,7 @@ const NAV_GROUPS: {
     label: 'Dev tools',
     tone: 'dev',
     paths: [
-      '/json-format',
-      '/json-to-yaml',
-      '/yaml-format',
+      '/convert',
       '/jwt',
       '/regex',
       '/string-escape',

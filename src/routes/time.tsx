@@ -116,7 +116,7 @@ export default function TimePage() {
         title="Date & time converter"
         lede="Turn any timestamp into any other: ISO 8601, RFC 2822, epoch (seconds to nanoseconds), Windows FILETIME, .NET ticks, SQL - rendered in the timezone you choose, with copy-ready snippets for Python, pandas, Go, C, Linux and JavaScript."
         related={[
-          { path: '/json-format', label: 'JSON format' },
+          { path: '/convert', label: 'Data converter' },
           { path: '/string-escape', label: 'String escape' },
           { path: '/regex', label: 'Regex checker' },
         ]}

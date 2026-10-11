@@ -92,7 +92,7 @@ export default function RegexPage() {
         lede="Type a pattern, watch it match live, and get flagged when a construct won't survive your target engine - JavaScript, Python, Go, Java, PCRE, POSIX ERE, .NET or Rust. Live matching uses the browser's ECMAScript engine; the lint is a static feature check per flavor."
         related={[
           { path: '/string-escape', label: 'String escape' },
-          { path: '/json-format', label: 'JSON format' },
+          { path: '/convert', label: 'Data converter' },
           { path: '/time', label: 'Date & time' },
         ]}
       >
