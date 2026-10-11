@@ -8,7 +8,7 @@ export default function XMLValidatorPage() {
   return (
     <>
       <RouteMeta path="/xml-validator" />
-      <ValidatorPage format="xml" />
+      <ValidatorPage format="xml" fixed />
     </>
   );
 }

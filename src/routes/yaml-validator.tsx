@@ -8,7 +8,7 @@ export default function YAMLValidatorPage() {
   return (
     <>
       <RouteMeta path="/yaml-validator" />
-      <ValidatorPage format="yaml" />
+      <ValidatorPage format="yaml" fixed />
     </>
   );
 }

@@ -101,33 +101,11 @@ export const tools: ToolDef[] = [
     icon: 'swap',
   },
   {
-    path: '/json-validator',
-    label: 'JSON validator',
-    blurb: 'Paste JSON, get an instant verdict with the exact parser error when it is not.',
-    icon: 'check',
-  },
-  {
-    path: '/yaml-validator',
-    label: 'YAML validator',
-    blurb: 'Check YAML - indentation, anchors and merge keys - before it hits CI.',
-    icon: 'check',
-  },
-  {
-    path: '/toml-validator',
-    label: 'TOML validator',
-    blurb: 'Check TOML - strict types, tables and dates - with the exact parser error.',
-    icon: 'check',
-  },
-  {
-    path: '/ini-validator',
-    label: 'INI validator',
-    blurb: 'Check [section] key=value files - with the exact parser error when not.',
-    icon: 'check',
-  },
-  {
-    path: '/xml-validator',
-    label: 'XML validator',
-    blurb: 'Check well-formedness, matched tags and the single-root rule.',
+    path: '/validators',
+    label: 'Data validator',
+    blurb:
+      'JSON, YAML, TOML, INI or XML - paste it and get an instant validity verdict with the exact ' +
+      'parser error when it is not.',
     icon: 'check',
   },
   {

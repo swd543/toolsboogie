@@ -249,11 +249,7 @@ export function ConverterPage(props: Props) {
           label: `${formatById(p.from)!.label} → ${formatById(p.to)!.label}`,
           group: 'Conversion paths',
         })),
-        ...(['json', 'yaml', 'toml', 'ini', 'xml'] as (DataFormat | 'auto')[]).map((f) => ({
-          path: `/${f}-validator`,
-          label: `${formatById(f as DataFormat)!.label} validator`,
-          group: 'Validators',
-        })),
+        { path: '/validators', label: 'Data validator (all formats)', group: 'Validators' },
         { path: '/regex', label: 'Regex checker', group: 'More tools' },
         { path: '/string-escape', label: 'String escaper', group: 'More tools' },
       ]}

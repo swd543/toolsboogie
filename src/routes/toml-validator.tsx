@@ -8,7 +8,7 @@ export default function TOMLValidatorPage() {
   return (
     <>
       <RouteMeta path="/toml-validator" />
-      <ValidatorPage format="toml" />
+      <ValidatorPage format="toml" fixed />
     </>
   );
 }

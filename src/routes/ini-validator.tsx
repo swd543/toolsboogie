@@ -8,7 +8,7 @@ export default function INIValidatorPage() {
   return (
     <>
       <RouteMeta path="/ini-validator" />
-      <ValidatorPage format="ini" />
+      <ValidatorPage format="ini" fixed />
     </>
   );
 }

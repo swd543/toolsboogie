@@ -8,7 +8,7 @@ export default function JSONValidatorPage() {
   return (
     <>
       <RouteMeta path="/json-validator" />
-      <ValidatorPage format="json" />
+      <ValidatorPage format="json" fixed />
     </>
   );
 }

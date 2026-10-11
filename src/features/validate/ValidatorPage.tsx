@@ -1,10 +1,14 @@
 /**
- * The dedicated format validators (shared by the five /<format>-validator
- * pages).
+ * Data validator - shared by the /validators hub and the five
+ * /<format>-validator pages.
  *
  * One input, one format, an instant verdict: a live parse check while you
  * type, and a Validate action that reports the structure ("object · 5
  * keys") or the exact parser error. No conversion, no upload.
+ *
+ * Hub mode (no `fixed`): a format selector, like the converter's From
+ * menu. Variant mode (`fixed`): a locked format with its prefilled sample,
+ * one page per format - the same pattern as /convert and its 20 paths.
  */
 import { createMemo, createSignal, onCleanup, onMount, Show } from 'solid-js';
 import { AdSlot } from '~/components/AdSlot';
@@ -19,6 +23,18 @@ import {
 } from '~/features/convert/logic';
 import { copyText } from '~/lib/clipboard';
 import type { DataFormat } from '~/lib/wasm';
+
+/** The five formats, in menu order. */
+const FORMATS: DataFormat[] = ['json', 'yaml', 'toml', 'ini', 'xml'];
+
+/** Per-format link labels (related sections, both directions). */
+const LABEL: Record<DataFormat, string> = {
+  json: 'JSON validator',
+  yaml: 'YAML validator',
+  toml: 'TOML validator',
+  ini: 'INI validator',
+  xml: 'XML validator',
+};
 
 /** Per-format copy: lede + an honest one-liner about the format's limits. */
 const COPY: Record<DataFormat, { lede: string; note: string }> = {
@@ -44,14 +60,25 @@ const COPY: Record<DataFormat, { lede: string; note: string }> = {
   },
 };
 
+const HUB_LEDE =
+  'Paste data, pick its format, and get an instant verdict - a structure summary when it ' +
+  'parses, the exact parser error when it does not. Nothing is uploaded.';
+
 interface Props {
-  /** The format this page validates. */
+  /** The format this page validates (the hub default when selectable). */
   format: DataFormat;
+  /** true on the five per-format pages (locked); omitted on the hub. */
+  fixed?: boolean;
 }
 
 export function ValidatorPage(props: Props) {
+  const fixed = props.fixed === true;
+  const [fmt, setFmt] = createSignal<DataFormat>(props.format);
+  /** The format in force: locked on variant pages, selectable on the hub. */
+  const effective = () => (fixed ? props.format : fmt());
+
   // The registry entry drives the labels ("JSON", "YAML", …).
-  const def = () => formatById(props.format)!;
+  const def = () => formatById(effective())!;
 
   const [input, setInput] = createSignal(SAMPLES[props.format]);
   const [valid, setValid] = createSignal(''); // '' = unknown, 'ok', or message
@@ -62,7 +89,7 @@ export function ValidatorPage(props: Props) {
 
   const name = () => def().name;
 
-  /* Live status: debounced parse check of the input as this format. */
+  /* Live status: debounced parse check of the input as the effective format. */
   let timer: ReturnType<typeof setTimeout> | undefined;
   const scheduleStatus = () => {
     clearTimeout(timer);
@@ -72,7 +99,7 @@ export function ValidatorPage(props: Props) {
       return;
     }
     timer = setTimeout(() => {
-      void validate(text, props.format)
+      void validate(text, effective())
         .then(() => setValid('ok'))
         .catch((e) =>
           setValid(coreUnavailableMessage(e) ?? (e instanceof Error ? e.message : String(e))),
@@ -82,10 +109,20 @@ export function ValidatorPage(props: Props) {
   onCleanup(() => clearTimeout(timer));
   onMount(() => scheduleStatus());
 
+  /** Switching formats on the hub: reload that format's sample and re-check. */
+  const onFormatChange = (id: DataFormat) => {
+    setFmt(id);
+    setInput(SAMPLES[id]);
+    setValid('');
+    setOutput('');
+    setError('');
+    scheduleStatus();
+  };
+
   /** Sample/Clear change the input programmatically - the onInput handler
    *  does not fire, so the live status must be (re)scheduled explicitly. */
   const loadSample = () => {
-    setInput(SAMPLES[props.format]);
+    setInput(SAMPLES[effective()]);
     scheduleStatus();
   };
   const clearInput = () => {
@@ -103,7 +140,7 @@ export function ValidatorPage(props: Props) {
     setBusy(true);
     setError('');
     try {
-      const r = await validateSummary(input(), props.format);
+      const r = await validateSummary(input(), effective());
       setOutput(r.ok ? `✓ Valid ${name()} - ${r.detail}` : `✗ ${r.detail}`);
       if (r.ok) setValid('ok');
     } finally {
@@ -125,32 +162,32 @@ export function ValidatorPage(props: Props) {
     return 'invalid';
   });
 
-  const other = (['json', 'yaml', 'toml', 'ini', 'xml'] as DataFormat[]).filter(
-    (f) => f !== props.format,
-  );
+  const related = () =>
+    fixed
+      ? [
+          { path: '/convert', label: 'Data converter (all five formats)', group: 'Convert' },
+          { path: '/validators', label: 'Data validator (all formats)', group: 'Validate' },
+          ...FORMATS.filter((f) => f !== props.format).map((f) => ({
+            path: `/${f}-validator`,
+            label: LABEL[f],
+            group: 'Other validators',
+          })),
+        ]
+      : [
+          { path: '/convert', label: 'Data converter (all five formats)', group: 'Convert' },
+          ...FORMATS.map((f) => ({
+            path: `/${f}-validator`,
+            label: LABEL[f],
+            group: 'Formats',
+          })),
+        ];
 
   return (
     <ToolPage
       tone="dev"
-      title={`${name()} Validator`}
-      lede={COPY[props.format].lede}
-      related={[
-        { path: '/convert', label: 'Data converter (all five formats)', group: 'Convert' },
-        ...other.map((f) => ({
-          path: `/${f}-validator`,
-          label:
-            f === 'json'
-              ? 'JSON validator'
-              : f === 'yaml'
-                ? 'YAML validator'
-                : f === 'toml'
-                  ? 'TOML validator'
-                  : f === 'ini'
-                    ? 'INI validator'
-                    : 'XML validator',
-          group: 'Other validators',
-        })),
-      ]}
+      title={fixed ? `${name()} Validator` : 'Data validator'}
+      lede={fixed ? COPY[effective()].lede : HUB_LEDE}
+      related={related()}
     >
       <Show when={error() !== ''} fallback={null}>
         <div class="error-card">
@@ -163,12 +200,28 @@ export function ValidatorPage(props: Props) {
       <ToolColumns
         aside={
           <>
+            <Show when={!fixed}>
+              <div class="opt-group">
+                <span class="opt-label">Format</span>
+                <select
+                  value={fmt()}
+                  ref={(el) => {
+                    el.value = fmt(); // SSR select values are content-model driven
+                  }}
+                  onChange={(e) => onFormatChange(e.currentTarget.value as DataFormat)}
+                >
+                  {FORMATS.map((f) => (
+                    <option value={f}>{formatById(f)!.label}</option>
+                  ))}
+                </select>
+              </div>
+            </Show>
             <div class="opt-group">
               <span class="opt-label">About {name()}</span>
-              <p class="opt-hint">{COPY[props.format].note}</p>
+              <p class="opt-hint">{COPY[effective()].note}</p>
             </div>
             <div class="opt-group">
-              <span class="opt-label">Need another format?</span>
+              <span class="opt-label">{fixed ? 'Need another format?' : 'Need to convert?'}</span>
               <p class="opt-hint">
                 The <a href="/convert/">data converter</a> turns {name().toLowerCase()} into JSON,
                 YAML, TOML, INI or XML.
@@ -201,7 +254,7 @@ export function ValidatorPage(props: Props) {
         <div class="cta">
           <button type="button" class="btn btn-primary" onClick={runValidate} disabled={busy()}>
             {busy() ? <SpinnerIcon /> : null}
-            Validate {name()}
+            {fixed ? `Validate ${name()}` : 'Validate'}
           </button>
           <AdSlot slot="tool-bottom" />
         </div>

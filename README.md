@@ -19,9 +19,10 @@ upload to. No account, no analytics, no cookies.
   minify, XML minify, YAML anchor/merge deduplication and a null policy for
   the formats without null. All parsing and rendering runs in the Rust/WASM
   core (`serde_json`, `serde_yaml`, `toml`, `rust-ini`, `quick-xml`).
-- **Validators** - dedicated JSON, YAML, TOML, INI and XML validator pages:
-  a live parse check while you type and the exact parser error when the
-  input is not valid, with a structure summary when it is.
+- **Data validator** - `/validators` (JSON, YAML, TOML, INI and XML, with a
+  format selector) plus one dedicated page per format (`/json-validator`,
+  ...): a live parse check while you type, the exact parser error when the
+  input is not valid, and a structure summary when it is.
 - **JWT decode / encode / modify** - decode any JWT (header + claims with
   exp/iat/nbf status), edit claims and re-sign with HS256/384/512,
   RS256/384/512, or ES256/384/512 via WebCrypto (PEM or JWK keys). Signing

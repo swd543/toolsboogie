@@ -54,6 +54,14 @@ export const routeMeta: Record<string, RouteMeta> = {
       '100% in your browser - nothing is uploaded.',
     image: ogImage,
   },
+  '/validators': {
+    title: 'Data Validator - JSON, YAML, TOML, INI, XML (Free, In-Browser) | ToolsBoogie',
+    description:
+      'Validate JSON, YAML, TOML, INI or XML right in your browser: an instant verdict with a ' +
+      'structure summary when it parses, or the exact parser error when it does not. ' +
+      '100% in your browser - nothing is uploaded.',
+    image: ogImage,
+  },
   '/json-validator': {
     title: 'JSON Validator - Free, Private, In-Browser (No Upload) | ToolsBoogie',
     description:
@@ -231,6 +239,7 @@ function toolSubcategory(route: string): string {
     case '/string-escape':
     case '/cron':
       return 'Developer Tool';
+    case '/validators':
     case '/json-validator':
     case '/yaml-validator':
     case '/toml-validator':
