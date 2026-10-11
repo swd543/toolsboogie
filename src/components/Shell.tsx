@@ -21,7 +21,7 @@ const NAV_GROUPS: {
   paths: string[];
 }[] = [
   { id: 'guitar', label: 'Guitar tuner', tone: 'guitar', paths: ['/guitar-tuner'] },
-  { id: 'measure', label: 'Measure', tone: 'measure', paths: ['/compass', '/level', '/ruler'] },
+  { id: 'measure', label: 'Measure', tone: 'measure', paths: ['/compass', '/level'] },
   {
     id: 'dev',
     label: 'Dev tools',

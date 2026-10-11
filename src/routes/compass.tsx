@@ -201,7 +201,6 @@ export default function CompassPage() {
         related={[
           { path: '/level', label: 'Level' },
           { path: '/guitar-tuner', label: 'Guitar tuner' },
-          { path: '/ruler', label: 'Ruler' },
         ]}
       >
         <div class="compass-stage">

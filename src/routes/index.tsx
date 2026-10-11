@@ -15,7 +15,6 @@ import {
   KeyIcon,
   LevelIcon,
   RegexIcon,
-  RulerIcon,
   ShieldTiny,
   SwapIcon,
   TimeIcon,
@@ -36,7 +35,6 @@ const ICONS: Record<ToolDef['icon'], (props: IconProps) => ReturnType<typeof Tun
   cron: CronIcon,
   key: KeyIcon,
   compass: CompassIcon,
-  ruler: RulerIcon,
   level: LevelIcon,
   check: CheckIcon,
 };

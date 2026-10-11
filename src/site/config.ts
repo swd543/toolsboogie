@@ -21,7 +21,7 @@ export const site = {
   tagline: 'Tools that boogie - right in your browser.',
   description:
     'Free, secure and private browser tools: guitar tuner, JSON/YAML formatter and converter, regex checker, ' +
-    'string escaper, date/time converter, JWT decoder, compass, level and on-screen ruler. 100% client-side - ' +
+    'string escaper, date/time converter, JWT decoder, compass and level. 100% client-side - ' +
     'everything runs on your device and nothing is ever uploaded.',
   /** Default origin used when VITE_SITE_URL is not set (dev). */
   fallbackUrl: 'http://localhost:3000',
@@ -81,7 +81,6 @@ export interface ToolDef {
     | 'cron'
     | 'key'
     | 'compass'
-    | 'ruler'
     | 'level'
     | 'check';
 }
@@ -144,13 +143,6 @@ export const tools: ToolDef[] = [
     label: 'Compass',
     blurb: 'A true-heading compass from your device sensors, rendered in real time.',
     icon: 'compass',
-  },
-  {
-    path: '/ruler',
-    label: 'Ruler',
-    blurb:
-      'A dual-edge on-screen ruler - metric left, imperial right - that calibrates itself from your screen.',
-    icon: 'ruler',
   },
   {
     path: '/level',

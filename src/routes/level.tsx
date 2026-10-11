@@ -261,10 +261,7 @@ export default function LevelPage() {
         tone="measure"
         title="Level"
         lede="Turn your device into a bubble level. The surface is a WebGPU shader (Canvas2D fallback) with a target ring that turns green when you're flat; degree readout, a calibrate button and a no-sensors demo (drag the sliders) cover the rest. Sensor data never leaves the device."
-        related={[
-          { path: '/compass', label: 'Compass' },
-          { path: '/ruler', label: 'Ruler' },
-        ]}
+        related={[{ path: '/compass', label: 'Compass' }]}
       >
         <div class="level-stage">
           <div class="level-view">

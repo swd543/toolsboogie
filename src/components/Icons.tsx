@@ -154,18 +154,6 @@ export function CompassIcon(props: IconProps) {
   );
 }
 
-/** Ruler. */
-export function RulerIcon(props: IconProps) {
-  return (
-    <Svg
-      {...props}
-      children={
-        '<rect x="3" y="9" width="18" height="6" rx="1.5"/><path d="M7 9v3M11 9v3M15 9v3M19 9v3"/>'
-      }
-    />
-  );
-}
-
 /** Level — bubble circle. */
 export function LevelIcon(props: IconProps) {
   return (

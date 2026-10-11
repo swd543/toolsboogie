@@ -33,8 +33,8 @@ export const routeMeta: Record<string, RouteMeta> = {
     title: `${site.name} - Free, Secure & Private Browser Tools (100% in Your Browser)`,
     description:
       'Free, secure tools that run entirely in your browser: guitar tuner, data converter for JSON, YAML, ' +
-      'TOML, INI and XML, regex checker, string escaper, date/time converter, JWT decoder, compass, level ' +
-      'and ruler. No uploads, no accounts - everything stays on your device.',
+      'TOML, INI and XML, regex checker, string escaper, date/time converter, JWT decoder, compass ' +
+      'and level. No uploads, no accounts - everything stays on your device.',
     image: ogImage,
   },
   '/guitar-tuner': {
@@ -160,14 +160,6 @@ export const routeMeta: Record<string, RouteMeta> = {
       'tablets; runs entirely in the browser - no data is collected.',
     image: ogImage,
   },
-  '/ruler': {
-    title: 'Online Ruler - Metric & Imperial On-Screen Ruler | ToolsBoogie',
-    description:
-      'A dual-edge on-screen ruler on the left and right edges of the screen - centimetres down the left, ' +
-      'inches down the right - plus a stop-to-stop slide measurement for objects longer than the screen. ' +
-      'The ruler moves live and corrects constant sensor bias on release. Free, private, no upload.',
-    image: ogImage,
-  },
   '/level': {
     title: 'Digital Level - Bubble Level in Your Browser (Free, Private) | ToolsBoogie',
     description:
@@ -253,7 +245,6 @@ function toolSubcategory(route: string): string {
       return 'Security Tool';
     case '/compass':
       return 'Navigation';
-    case '/ruler':
     case '/level':
       return 'Measurement';
     default:

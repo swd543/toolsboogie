@@ -46,14 +46,6 @@ upload to. No account, no analytics, no cookies.
 - **Compass** - device orientation / WebGeolocation heading with a
   WebGPU-rendered dial (Canvas2D fallback), 16-wind labels and a
   calibration offset.
-- **Measuring stick (ruler)** - vertical rulers on the left and right
-  edges of the screen: metric (cm) down the left, imperial (in) down the
-  right, each zero at the top. Calibrates itself from your screen's pixel
-  density (96 × DPR estimate, flagged as such) or takes your display's
-  real size / PPI for exactness. For objects longer than the screen:
-  press to anchor at zero, slide the phone along the object, stop, then
-  lift. The live ruler follows the slide; the final stop-to-stop stroke is
-  corrected for constant sensor bias before the reading is held.
 - **Level** - a bubble level built on device tilt, with a WebGPU-rendered
   bubble (Canvas2D fallback), degree readout and a "level" indicator.
 
@@ -101,7 +93,6 @@ All processing happens in the browser:
 - JWT signing/verification: **WebCrypto** (`crypto.subtle`) - no third-party
   crypto library; keys are handled in-browser and never persisted.
 - Compass / level: **deviceorientation** + **WebGPU** (Canvas2D fallback).
-- Ruler: pure DOM/CSS + device PPI.
 
 No analytics, no telemetry, no cookies. See `src/site/config.ts` for the
 donation wallet info shown in the footer (direct wallet addresses - no

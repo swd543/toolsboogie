@@ -43,7 +43,7 @@ degrade honestly**.
 | JSON → YAML, YAML format | **toolcore** (Rust/WASM) | `serde_yaml`-style emitter. |
 | Pitch detection | **toolcore** (Rust/WASM) | YIN autocorrelation + `rustfft` FFT. Scalar on stable; `wasm_simd` is a nightly opt-in (see below). |
 | Compass dial, level bubble | **WebGPU** | Fullscreen-triangle compute-ish render (WGSL); Canvas2D fallback when WebGPU is unavailable or the canvas is lost. |
-| Everything else | **plain TypeScript** | JWT (WebCrypto), regex, escape, time, ruler. |
+| Everything else | **plain TypeScript** | JWT (WebCrypto), regex, escape, time. |
 
 The WASM core is a single crate (`wasm/toolcore`) with a stable, small API
 surfaced through `src/lib/wasm.ts`. It is the *only* compiled artifact in
@@ -79,7 +79,7 @@ the bundle; everything it does is pure functions over bytes/arrays.
 - **Level**: the bubble surface is a WebGPU render (a radial gradient +
   a bubble disc whose position maps to tilt), with the same Canvas2D
   fallback. The *tilt* comes from `deviceorientation`, never from the GPU.
-- **Not used for**: pitch, JSON, JWT, regex, escape, time, ruler. Those
+- **Not used for**: pitch, JSON, JWT, regex, escape, time. Those
   have no meaningful GPU workload; pushing them through WebGPU would add
   latency and risk for zero gain.
 
@@ -137,5 +137,5 @@ testable in Node without a browser.
 - Responsive: no horizontal overflow at 360/768/1280. The classic flex
   `min-width: auto` trap is handled on the header nav (scrolls) and footer
   (wraps).
-- Ruler calibration is persisted in `localStorage` (the only storage the
-  site ever uses); nothing is sent anywhere.
+- The guitar tuner persists its last tuning, custom strings and notation
+  in `localStorage`; nothing is sent anywhere.

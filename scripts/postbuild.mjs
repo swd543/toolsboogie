@@ -63,7 +63,6 @@ const routes = [
   '/cron',
   '/jwt',
   '/compass',
-  '/ruler',
   '/level',
   '/privacy',
 ];

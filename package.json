@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "packageManager": "pnpm@11.13.1",
-  "description": "Handy browser tools that boogie — guitar tuner, JSON/YAML, JWT, compass, level, ruler. 100% client-side. Your data never leaves your device.",
+  "description": "Handy browser tools that boogie — guitar tuner, JSON/YAML, JWT, compass and level. 100% client-side. Your data never leaves your device.",
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",

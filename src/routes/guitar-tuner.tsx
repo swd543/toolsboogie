@@ -209,7 +209,6 @@ export default function GuitarTunerPage() {
         related={[
           { path: '/compass', label: 'Compass' },
           { path: '/level', label: 'Level' },
-          { path: '/ruler', label: 'Ruler' },
         ]}
       >
         <div class="tuner-stage">

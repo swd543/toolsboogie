@@ -42,9 +42,9 @@ export default function PrivacyPage() {
         <h2>What your browser may store</h2>
         <ul>
           <li>
-            The ruler calibration (screen size) is stored in <code>localStorage</code> on this
-            device only, so it survives a reload. You can reset it on the ruler page or clear site
-            data in your browser.
+            The guitar tuner stores your last tuning, custom strings and notation in
+            <code>localStorage</code> on this device only, so they survive a reload. Clear site data
+            in your browser to remove them.
           </li>
         </ul>
 

@@ -38,7 +38,7 @@ export default defineConfig({
       // (header nav + footer + home grid) so crawlLinks covers them all.
       // The retired routes are not linked anywhere anymore, so they are
       // listed explicitly - their redirect stubs still need to prerender.
-      routes: ['/', '/json-format', '/json-to-yaml', '/yaml-format'],
+      routes: ['/', '/json-format', '/json-to-yaml', '/yaml-format', '/ruler'],
       crawlLinks: true,
       failOnError: true,
     },
