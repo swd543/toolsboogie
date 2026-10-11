@@ -1349,36 +1349,82 @@ input[type="range"] {
 /*  Ruler                                                              */
 /* ------------------------------------------------------------------ */
 
-.ruler-canvas-wrap {
-  position: relative;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-s);
-  overflow: hidden;
-  background: var(--bg);
+/* Full-viewport overlay carrying the two edge rulers. It sits below the
+   sticky header (z 20) so the header occludes the strips' top corners,
+   and ignores pointer events so the page underneath keeps working. */
+.ruler-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
 }
 
 .ruler-canvas {
   display: block;
   width: 100%;
-  height: auto;
-  touch-action: none;
+  height: 100%;
 }
 
+/* Floating readout for the slide measurement: bottom-centre, above the
+   overlay, and (unlike the old version) interactive so its buttons work. */
 .ruler-measure {
-  position: absolute;
+  position: fixed;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  z-index: 40;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 0.5rem;
+  max-width: calc(100vw - 1.5rem);
   font-family: var(--font-mono);
   font-size: 0.8rem;
   font-weight: 700;
   color: var(--accent-ink);
   background: var(--accent);
   border-radius: 999px;
-  padding: 0.25rem 0.6rem;
-  pointer-events: none;
+  padding: 0.35rem 0.75rem;
   box-shadow: var(--shadow-2);
   white-space: nowrap;
+}
+
+.ruler-measure > span:last-of-type {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ruler-measure .live-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-ink);
+  animation: ruler-pulse 1s ease-in-out infinite;
+}
+
+@keyframes ruler-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.ruler-measure button {
+  flex: none;
+  font: inherit;
+  color: var(--accent-ink);
+  background: color-mix(in srgb, var(--accent-ink) 22%, transparent);
+  border: none;
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  cursor: pointer;
+}
+
+.ruler-measure button:active {
+  transform: scale(0.96);
 }
 
 .ruler-pts {
