@@ -12,6 +12,7 @@ import {
   type NullPolicy,
   wasmDataConvert,
   wasmDetectFormat,
+  wasmValidateData,
 } from '~/lib/wasm';
 
 export interface FormatDef {
@@ -104,11 +105,13 @@ export function parseSlug(slug: string): FormatPair | null {
 }
 
 /**
- * Sample that converts cleanly to every format: flat scalars plus one
- * section, no arrays and no nulls (INI can't store arrays, TOML/XML can't
- * store null).
+ * Per-format samples that convert cleanly to every other format: flat
+ * scalars plus one section, no arrays and no nulls (INI can't store
+ * arrays, TOML/XML can't store null). Each path page prefills the input
+ * in its own source format so the example matches the From select.
  */
-export const SAMPLE_INPUT = `{
+export const SAMPLES: Record<DataFormat, string> = {
+  json: `{
   "app": "boogie",
   "environment": "production",
   "debug": false,
@@ -118,7 +121,61 @@ export const SAMPLE_INPUT = `{
     "name": "boogie_db",
     "ssl": true
   }
-}`;
+}`,
+  yaml: '',
+  toml: '',
+  ini: '',
+  xml: '',
+};
+
+SAMPLES.yaml = `app: boogie
+environment: production
+debug: false
+port: 8080
+database:
+  host: localhost
+  name: boogie_db
+  ssl: true`;
+
+SAMPLES.toml = `app = "boogie"
+environment = "production"
+debug = false
+port = 8080
+
+[database]
+host = "localhost"
+name = "boogie_db"
+ssl = true`;
+
+SAMPLES.ini = `app=boogie
+environment=production
+debug=false
+port=8080
+
+[database]
+host=localhost
+name=boogie_db
+ssl=true`;
+
+SAMPLES.xml = `<config>
+  <app>boogie</app>
+  <environment>production</environment>
+  <debug>false</debug>
+  <port>8080</port>
+  <database>
+    <host>localhost</host>
+    <name>boogie_db</name>
+    <ssl>true</ssl>
+  </database>
+</config>`;
+
+/** Back-compat name for the (default, JSON) sample. */
+export const SAMPLE_INPUT = SAMPLES.json;
+
+/** The input prefill for a source format ('auto' = the JSON sample). */
+export function sampleFor(from: DataFormat | 'auto'): string {
+  return from === 'auto' ? SAMPLES.json : SAMPLES[from];
+}
 
 export interface ConvertResult {
   output: string;
@@ -154,9 +211,49 @@ export async function convert(
 
 /** Validate `input` as `format` without converting (live status). */
 export async function validate(input: string, format: DataFormat): Promise<void> {
-  // Converting to the same format is the core's validation pass: it parses
-  // and re-renders, surfacing parser errors with positions.
-  await wasmDataConvert(input, format, format, { anchors: false });
+  // The core's parse-check: parses only, surfacing parser errors with positions.
+  await wasmValidateData(input, format);
+}
+
+export interface ValidateResult {
+  ok: boolean;
+  /** The format that was checked (resolved from 'auto' when possible). */
+  format: DataFormat | null;
+  /** "object · 5 keys" when ok, the parse error message when not. */
+  detail: string;
+}
+
+/**
+ * Validate `input` as `from` ('auto' = detect first) and report the result
+ * with a one-line structure summary. Never throws for parse problems -
+ * those are returned as `{ ok: false }`; only core-unavailable errors throw.
+ */
+export async function validateSummary(
+  input: string,
+  from: DataFormat | 'auto',
+): Promise<ValidateResult> {
+  let src: DataFormat | null = from === 'auto' ? null : from;
+  if (from === 'auto') {
+    const guess = await wasmDetectFormat(input).catch(() => '');
+    if (!FORMATS.some((f) => f.id === guess)) {
+      return {
+        ok: false,
+        format: null,
+        detail: 'Could not detect a format. Pick one in the From menu.',
+      };
+    }
+    src = guess as DataFormat;
+  }
+  try {
+    const summary = await wasmValidateData(input, src as DataFormat);
+    return { ok: true, format: src, detail: summary };
+  } catch (e) {
+    return {
+      ok: false,
+      format: src,
+      detail: coreUnavailableMessage(e) ?? (e instanceof Error ? e.message : String(e)),
+    };
+  }
 }
 
 export function coreUnavailableMessage(e: unknown): string | null {

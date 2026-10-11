@@ -2,10 +2,12 @@
  * The data converter page (shared by /convert and the 20 per-path URLs).
  *
  * One input, five source formats (auto-detected by default), five targets,
- * and per-target options: JSON indent, YAML anchors, sort keys everywhere,
- * and a null policy for the formats that have no null.
+ * per-target options (JSON indent, YAML anchors, XML minify, sort keys
+ * everywhere, and a null policy for the formats without null), and a
+ * parse-only Validate action. Each path page prefills its own sample in its
+ * source format.
  */
-import { createMemo, createSignal, onCleanup, onMount, Show } from 'solid-js';
+import { createEffect, createMemo, createSignal, onCleanup, onMount, Show } from 'solid-js';
 import { AdSlot } from '~/components/AdSlot';
 import { AlertIcon, CopyIcon, DownloadIcon, SpinnerIcon } from '~/components/Icons';
 import { CodePanel, ToolColumns, ToolPage } from '~/components/Shell';
@@ -16,8 +18,9 @@ import {
   type FormatDef,
   formatById,
   formatPairs,
-  SAMPLE_INPUT,
+  sampleFor,
   validate,
+  validateSummary,
 } from '~/features/convert/logic';
 import { copyText } from '~/lib/clipboard';
 import { saveText } from '~/lib/download';
@@ -37,13 +40,18 @@ interface Props {
 }
 
 export function ConverterPage(props: Props) {
-  const [input, setInput] = createSignal(SAMPLE_INPUT);
+  // Prefill the input with a sample written in the page's own source format.
+  const [input, setInput] = createSignal(sampleFor(props.from));
   const [fromSel, setFromSel] = createSignal<DataFormat | 'auto'>(props.from);
   const [toSel, setToSel] = createSignal<DataFormat>(props.to);
   const [indent, setIndent] = createSignal(2);
   const [sortKeys, setSortKeys] = createSignal(false);
   const [anchors, setAnchors] = createSignal(true);
+  const [minify, setMinify] = createSignal(false);
   const [nullPolicy, setNullPolicy] = createSignal<NullPolicy>('fail');
+
+  /** 'convert' = normal output, 'validate' = parse-check result line. */
+  const [resultKind, setResultKind] = createSignal<'convert' | 'validate'>('convert');
 
   const [output, setOutput] = createSignal('');
   const [busy, setBusy] = createSignal(false);
@@ -93,6 +101,22 @@ export function ConverterPage(props: Props) {
   // run the debounced status loop).
   onMount(() => scheduleStatus());
 
+  // SPA navigation between the 20 path pages updates the props without a
+  // remount; re-sync the state so each path starts with its own preset
+  // pair and its own sample.
+  createEffect(() => {
+    const from = props.from;
+    const to = props.to;
+    setFromSel(from);
+    setToSel(to);
+    setInput(sampleFor(from));
+    setOutput('');
+    setError('');
+    setResultKind('convert');
+    setDetected('');
+    setValid('');
+  });
+
   const run = async () => {
     if (!input().trim()) {
       setError('Paste some data first (or load the sample).');
@@ -102,11 +126,13 @@ export function ConverterPage(props: Props) {
     expandAds();
     setBusy(true);
     setError('');
+    setResultKind('convert');
     try {
       const r = await convert(input(), fromSel(), toSel(), {
         indent: toSel() === 'json' ? indent() : undefined,
         sortKeys: sortKeys(),
         anchors: toSel() === 'yaml' ? anchors() : undefined,
+        minify: toSel() === 'xml' ? minify() : undefined,
         nullPolicy:
           toSel() === 'toml' || toSel() === 'ini' || toSel() === 'xml' ? nullPolicy() : undefined,
       });
@@ -117,6 +143,28 @@ export function ConverterPage(props: Props) {
     } catch (e) {
       setOutput('');
       setError(coreUnavailableMessage(e) ?? (e instanceof Error ? e.message : String(e)));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  /** Parse-check the input (no conversion) and show the result in the output panel. */
+  const runValidate = async () => {
+    if (!input().trim()) {
+      setError('Paste some data first (or load the sample).');
+      setOutput('');
+      return;
+    }
+    setBusy(true);
+    setError('');
+    setResultKind('validate');
+    try {
+      const r = await validateSummary(input(), fromSel());
+      setOutput(
+        r.ok
+          ? `✓ Valid ${formatById(r.format ?? 'json')?.label ?? r.format} - ${r.detail}`
+          : `✗ ${r.detail}`,
+      );
     } finally {
       setBusy(false);
     }
@@ -151,8 +199,13 @@ export function ConverterPage(props: Props) {
       title={props.title}
       lede="Convert between JSON, YAML, TOML, INI and XML - format, validate and reshape data without leaving your browser. Nothing is uploaded."
       related={[
-        { path: '/regex', label: 'Regex checker' },
-        { path: '/string-escape', label: 'String escaper' },
+        ...pairs.map((p) => ({
+          path: `/convert/${p.slug}`,
+          label: `${formatById(p.from)!.label} → ${formatById(p.to)!.label}`,
+          group: 'Conversion paths',
+        })),
+        { path: '/regex', label: 'Regex checker', group: 'More tools' },
+        { path: '/string-escape', label: 'String escaper', group: 'More tools' },
       ]}
     >
       <Show when={error() !== ''} fallback={null}>
@@ -237,6 +290,20 @@ export function ConverterPage(props: Props) {
                   <code>&lt;&lt;: *anchor</code> merge - whatever can be merged, is.
                 </p>
               </Show>
+              <Show when={toSel() === 'xml'}>
+                <label class="toggle">
+                  <input
+                    type="checkbox"
+                    checked={minify()}
+                    onChange={(e) => setMinify(e.currentTarget.checked)}
+                  />
+                  <span class="knob" />
+                  <span class="toggle-text">Minify (one line)</span>
+                </label>
+                <p class="opt-hint">
+                  Compress the document to a single line - same content, no indentation or newlines.
+                </p>
+              </Show>
               <label class="toggle">
                 <input
                   type="checkbox"
@@ -289,7 +356,7 @@ export function ConverterPage(props: Props) {
               <button
                 type="button"
                 class="btn btn-sm btn-ghost"
-                onClick={() => setInput(SAMPLE_INPUT)}
+                onClick={() => setInput(sampleFor(fromSel()))}
               >
                 Sample
               </button>
@@ -304,45 +371,40 @@ export function ConverterPage(props: Props) {
             {busy() ? <SpinnerIcon /> : null}
             Convert to {toDef().label}
           </button>
+          <button type="button" class="btn" onClick={runValidate} disabled={busy()}>
+            Validate
+          </button>
           <AdSlot slot="tool-bottom" />
         </div>
         <Show when={output() !== ''}>
           <CodePanel
-            label={`${toDef().label} output`}
+            label={resultKind() === 'validate' ? 'Validation' : `${toDef().label} output`}
             value={output()}
             readOnly
-            stat={`${humanSize(output().length)} · via ${formatById(effectiveFrom())?.label ?? effectiveFrom()}`}
+            hasError={resultKind() === 'validate' && output().startsWith('✗')}
+            stat={
+              resultKind() === 'validate'
+                ? 'parse check only - no conversion'
+                : `${humanSize(output().length)} · via ${formatById(effectiveFrom())?.label ?? effectiveFrom()}`
+            }
             actions={
               <span class="code-actions">
                 <button type="button" class="btn btn-sm btn-ghost" onClick={copyOut}>
                   <CopyIcon /> {copied() ? 'Copied ✓' : 'Copy'}
                 </button>
-                <button
-                  type="button"
-                  class="btn btn-sm btn-ghost"
-                  onClick={() => saveText(output(), `converted.${toDef().ext}`, toDef().mime)}
-                >
-                  <DownloadIcon /> Download
-                </button>
+                {resultKind() === 'convert' ? (
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-ghost"
+                    onClick={() => saveText(output(), `converted.${toDef().ext}`, toDef().mime)}
+                  >
+                    <DownloadIcon /> Download
+                  </button>
+                ) : null}
               </span>
             }
           />
         </Show>
-        <div class="convert-paths">
-          <h2>Every conversion path</h2>
-          <p class="convert-paths-hint">
-            Each path has its own page, ready to share - the converter loads with that pair preset.
-          </p>
-          <ul>
-            {pairs.map((p) => (
-              <li>
-                <a href={`/convert/${p.slug}`}>
-                  {formatById(p.from)!.label} → {formatById(p.to)!.label}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
       </ToolColumns>
     </ToolPage>
   );

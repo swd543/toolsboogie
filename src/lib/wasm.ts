@@ -37,6 +37,7 @@ interface ToolcoreModule {
   jsonToYaml(input: string): string;
   dataConvert(input: string, from: string, to: string, optionsJson: string): string;
   detectFormat(input: string): string;
+  validateData(input: string, from: string): string;
   pitchDetect(samples: Float32Array, sampleRate: number): PitchResultHandle;
   default?: (input?: unknown) => Promise<void>;
 }
@@ -131,6 +132,8 @@ export interface DataConvertOptions {
   sortKeys?: boolean;
   /** YAML output: deduplicate repeated blocks with anchors/merge keys. */
   anchors?: boolean;
+  /** XML output: single line, no indentation (default: pretty). */
+  minify?: boolean;
   /** null policy for TOML/INI/XML output (default: fail). */
   nullPolicy?: NullPolicy;
 }
@@ -145,6 +148,7 @@ export function wasmDataConvert(
   if (options.indent !== undefined) opts.indent = options.indent;
   if (options.sortKeys !== undefined) opts.sortKeys = options.sortKeys;
   if (options.anchors !== undefined) opts.anchors = options.anchors;
+  if (options.minify !== undefined) opts.minify = options.minify;
   if (options.nullPolicy !== undefined) opts.nullPolicy = options.nullPolicy;
   return loadModule().then((mod) => mod.dataConvert(input, from, to, JSON.stringify(opts)));
 }
@@ -152,6 +156,15 @@ export function wasmDataConvert(
 /** Auto-detect the format of `input` (json/yaml/toml/ini/xml), '' when unknown. */
 export function wasmDetectFormat(input: string): Promise<string> {
   return loadModule().then((mod) => mod.detectFormat(input));
+}
+
+/**
+ * Parse-check `input` as `from` ('auto' = detect first). Resolves to a short
+ * structure summary ("object · 4 keys") when valid; rejects with the parse
+ * error message otherwise.
+ */
+export function wasmValidateData(input: string, from: DataFormat | 'auto'): Promise<string> {
+  return loadModule().then((mod) => mod.validateData(input, from));
 }
 
 /* ---------------- Pitch ---------------- */

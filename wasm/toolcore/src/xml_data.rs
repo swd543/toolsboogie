@@ -169,6 +169,15 @@ pub fn value_to_xml(value: &Value) -> Result<String, String> {
     Ok(out)
 }
 
+/// Render a JSON value tree as a minified (single-line) XML document.
+pub fn value_to_xml_min(value: &Value) -> Result<String, String> {
+    // The pretty output is deterministic: every line is a complete fragment,
+    // so stripping the indentation and newlines yields valid minified XML
+    // without touching element text (only line-leading whitespace is removed).
+    let pretty = value_to_xml(value)?;
+    Ok(pretty.trim_end().split('\n').map(str::trim_start).collect())
+}
+
 fn render_node(out: &mut String, name: &str, v: &Value, depth: usize) -> Result<(), String> {
     if !is_valid_name(name) {
         return Err(format!("invalid XML element name: {name}"));
@@ -348,5 +357,26 @@ mod tests {
     #[test]
     fn invalid_names_are_rejected() {
         assert!(value_to_xml(&serde_json::json!({ "bad name": 1 })).is_err());
+    }
+
+    #[test]
+    fn minify_collapses_to_one_line() {
+        let v: Value = serde_json::json!({
+            "@id": "7",
+            "child": { "k": "v" },
+            "list": [1, 2]
+        });
+        let pretty = value_to_xml(&v).unwrap();
+        let min = value_to_xml_min(&v).unwrap();
+        assert!(!min.contains('\n'), "minified xml must be one line: {min}");
+        // minified is exactly the pretty output minus indentation/newlines
+        let expect: String = pretty
+            .trim_end()
+            .split('\n')
+            .map(str::trim_start)
+            .collect();
+        assert_eq!(min, expect, "minify must not alter content: {min}");
+        // parses back to the same tree as the pretty output
+        assert_eq!(xml_to_value(&min).unwrap(), xml_to_value(&pretty).unwrap());
     }
 }

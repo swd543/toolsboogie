@@ -56,6 +56,8 @@ struct Opts {
     sort_keys: bool,
     /// YAML output: deduplicate repeated blocks with anchors/merge keys.
     anchors: bool,
+    /// XML output: single-line (no indentation or newlines).
+    minify: bool,
     null_policy: NullPolicy,
 }
 
@@ -65,13 +67,14 @@ impl Default for Opts {
             indent: 2,
             sort_keys: false,
             anchors: true,
+            minify: false,
             null_policy: NullPolicy::Fail,
         }
     }
 }
 
 /// Parse the small per-target options object
-/// (`{"indent":2,"sortKeys":true,"anchors":true,"nullPolicy":"fail"}`).
+/// (`{"indent":2,"sortKeys":true,"anchors":true,"minify":false,"nullPolicy":"fail"}`).
 /// Defaults: 2-space indent, document key order, anchors on, nulls fail.
 fn parse_opts(raw: &str) -> Opts {
     let v: Value = match serde_json::from_str(raw) {
@@ -92,13 +95,17 @@ fn parse_opts(raw: &str) -> Opts {
         .get("anchors")
         .and_then(|x| x.as_bool())
         .unwrap_or(true);
+    let minify = v
+        .get("minify")
+        .and_then(|x| x.as_bool())
+        .unwrap_or(false);
     let null_policy = v
         .get("nullPolicy")
         .or_else(|| v.get("null_policy"))
         .and_then(|x| x.as_str())
         .map(NullPolicy::parse)
         .unwrap_or(NullPolicy::Fail);
-    Opts { indent, sort_keys, anchors, null_policy }
+    Opts { indent, sort_keys, anchors, minify, null_policy }
 }
 
 /// First format that parses `input`, or an empty string when none do.
@@ -470,7 +477,7 @@ fn scalar_text(v: &Value, key: &str) -> Result<String, String> {
 ///
 /// `from`/`to` are `json`, `yaml`, `toml`, `ini` or `xml`; `options_json`
 /// is a small JSON object
-/// (`{"indent":2,"sortKeys":true,"anchors":true,"nullPolicy":"fail"}`)
+/// (`{"indent":2,"sortKeys":true,"anchors":true,"minify":false,"nullPolicy":"fail"}`)
 /// with per-target options.
 pub fn data_convert_core(input: &str, from: &str, to: &str, options_json: &str) -> Result<String, String> {
     if !FORMATS.contains(&from) || !FORMATS.contains(&to) {
@@ -496,21 +503,60 @@ pub fn data_convert_core(input: &str, from: &str, to: &str, options_json: &str) 
         }
         "toml" => render_toml(&value, opts.null_policy),
         "ini" => render_ini(&value, opts.null_policy),
-        "xml" => render_xml(&value, opts.null_policy),
+        "xml" => render_xml(&value, opts.null_policy, opts.minify),
         _ => Ok(String::new()),
     }
 }
 
 /// JSON value -> XML document; nulls follow the caller's policy.
-fn render_xml(value: &Value, policy: NullPolicy) -> Result<String, String> {
+fn render_xml(value: &Value, policy: NullPolicy, minify: bool) -> Result<String, String> {
     let value = apply_null_policy(value, policy)?;
-    xml_data::value_to_xml(&value)
+    if minify {
+        xml_data::value_to_xml_min(&value)
+    } else {
+        xml_data::value_to_xml(&value)
+    }
 }
 
 /// WASM entry point for `data_convert_core`.
 #[wasm_bindgen(js_name = dataConvert)]
 pub fn data_convert(input: &str, from: &str, to: &str, options_json: &str) -> Result<String, JsError> {
     data_convert_core(input, from, to, options_json).map_err(|e| JsError::new(&e))
+}
+
+/// Parse-check one document without converting. `from` may be `"auto"`
+/// (the format is detected first). Resolves to a one-line structure summary
+/// ("object · 4 keys") when valid; rejects with the parse error otherwise.
+pub fn validate_core(input: &str, from: &str) -> Result<String, String> {
+    let from = if from == "auto" {
+        let f = detect_format(input);
+        if f.is_empty() {
+            return Err("Could not detect a format. Pick one in the From menu.".to_string());
+        }
+        f
+    } else {
+        from.to_string()
+    };
+    let v = parse_to_value(input, &from)?;
+    Ok(value_summary(&v))
+}
+
+/// WASM entry point for `validate_core`.
+#[wasm_bindgen(js_name = validateData)]
+pub fn validate_data(input: &str, from: &str) -> Result<String, JsError> {
+    validate_core(input, from).map_err(|e| JsError::new(&e))
+}
+
+/// One-line shape of a parsed tree, for the validator readout.
+fn value_summary(v: &Value) -> String {
+    match v {
+        Value::Object(m) => format!("object · {} keys", m.len()),
+        Value::Array(items) => format!("array · {} items", items.len()),
+        Value::Null => "null".to_string(),
+        Value::String(_) => "string".to_string(),
+        Value::Number(_) => "number".to_string(),
+        Value::Bool(_) => "boolean".to_string(),
+    }
 }
 
 #[cfg(test)]
@@ -751,5 +797,32 @@ mod tests {
     fn unknown_format_errors() {
         assert!(data_convert_core("{}", "json", "nope2", "{}").is_err());
         assert!(data_convert_core("{}", "nope", "json", "{}").is_err());
+    }
+
+    #[test]
+    fn xml_minify_option_collapses_output() {
+        let input = r#"{"app": "demo", "db": {"host": "localhost"}}"#;
+        let pretty = data_convert_core(input, "json", "xml", "{}").unwrap();
+        assert!(pretty.contains('\n'), "default xml is pretty: {pretty}");
+        let min =
+            data_convert_core(input, "json", "xml", r#"{"minify": true}"#).unwrap();
+        assert!(!min.contains('\n'), "minified xml is one line: {min}");
+        assert!(min.starts_with("<?xml"), "{min}");
+        // both parse back to the same tree
+        let a = xml_data::xml_to_value(&pretty).unwrap();
+        let b = xml_data::xml_to_value(&min).unwrap();
+        assert_eq!(a, b);
+    }
+
+    #[test]
+    fn validate_reports_shape_or_error() {
+        let ok = validate_core(r#"{"a": 1, "b": [1, 2]}"#, "json").unwrap();
+        assert!(ok.starts_with("object"), "{ok}");
+        assert!(validate_core("a: 1", "auto").is_ok(), "auto detects yaml");
+        let bad = validate_core("{nope", "json").unwrap_err();
+        assert!(bad.contains("Invalid JSON"), "bad: {bad}");
+        let undetect = validate_core("a: b: c", "auto").unwrap_err();
+        assert!(undetect.contains("Could not detect"), "undetect: {undetect}");
+        assert!(validate_core("{}", "nope").is_err(), "unknown from format");
     }
 }

@@ -10,6 +10,8 @@ import {
   parseSlug,
   pathMeta,
   SAMPLE_INPUT,
+  SAMPLES,
+  sampleFor,
   slugFor,
 } from './logic';
 
@@ -76,5 +78,40 @@ describe('sample input', () => {
       }
     };
     walk(v);
+  });
+});
+
+describe('per-format samples', () => {
+  it('has a non-empty sample for every format', () => {
+    for (const f of FORMATS) {
+      expect(SAMPLES[f.id].trim().length, `sample for ${f.id}`).toBeGreaterThan(10);
+    }
+  });
+
+  it('sampleFor resolves auto to the JSON sample and pins named formats', () => {
+    expect(sampleFor('auto')).toBe(SAMPLES.json);
+    expect(sampleFor('auto')).toBe(SAMPLE_INPUT);
+    expect(sampleFor('yaml')).toBe(SAMPLES.yaml);
+    expect(sampleFor('xml')).toBe(SAMPLES.xml);
+  });
+
+  it('each sample is written in its own format', () => {
+    expect(SAMPLES.json.trimStart().startsWith('{')).toBe(true);
+    expect(SAMPLES.yaml).toContain('app: boogie');
+    expect(SAMPLES.toml).toContain('app = "boogie"');
+    expect(SAMPLES.ini).toContain('app=boogie');
+    expect(SAMPLES.xml).toContain('<config>');
+  });
+
+  it('no sample contains arrays or nulls (INI/TOML/XML limits)', () => {
+    for (const f of FORMATS) {
+      const s = SAMPLES[f.id];
+      // TOML tables and INI sections legitimately use [brackets]; the array
+      // check applies to the formats where brackets mean arrays.
+      if (f.id !== 'toml' && f.id !== 'ini') {
+        expect(s, `${f.id} sample`).not.toMatch(/\[|\]/);
+      }
+      expect(s, `${f.id} sample`).not.toMatch(/null|~\b/);
+    }
   });
 });

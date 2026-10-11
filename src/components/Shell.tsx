@@ -206,10 +206,17 @@ export function Shell(props: { children?: JSX.Element }) {
 /**
  * Tool page scaffold: SEO intro + badges, children, related links.
  */
+
+export interface RelatedLink {
+  path: string;
+  label: string;
+  /** Optional subheading rendered before this entry (repeated per group). */
+  group?: string;
+}
 export function ToolPage(props: {
   title: string;
   lede: string;
-  related?: { path: string; label: string }[];
+  related?: RelatedLink[];
   /** Tool-group accent hue (scoped accent override — see components.css). */
   tone?: 'guitar' | 'measure' | 'dev';
   children: JSX.Element;
@@ -231,8 +238,13 @@ export function ToolPage(props: {
       {props.children}
       <div class="related">
         <span class="related-label">Related:</span>
-        {props.related?.map((r) => (
-          <a href={r.path}>{r.label} →</a>
+        {props.related?.map((r, i) => (
+          <>
+            {r.group && (i === 0 || props.related?.[i - 1]?.group !== r.group) ? (
+              <span class="related-group">{r.group}</span>
+            ) : null}
+            <a href={r.path}>{r.label} →</a>
+          </>
         ))}
       </div>
     </div>
