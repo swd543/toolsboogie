@@ -26,14 +26,7 @@ const NAV_GROUPS: {
     id: 'dev',
     label: 'Dev tools',
     tone: 'dev',
-    paths: [
-      '/convert',
-      '/jwt',
-      '/regex',
-      '/string-escape',
-      '/time',
-      '/cron',
-    ],
+    paths: ['/convert', '/jwt', '/regex', '/string-escape', '/time', '/cron'],
   },
 ];
 const groupTools = (paths: string[]) =>
