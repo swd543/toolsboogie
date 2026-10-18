@@ -10,7 +10,7 @@ name = "toolcore"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-quick-xml = "0.36"
+quick-xml = "0.42"
 rust-ini = "0.21"
 rustfft = "6"
 serde = "1"
